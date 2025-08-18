@@ -16,12 +16,3 @@ export function useDevice(deviceId: string) {
     enabled: !!deviceId,
   });
 }
-
-export function useDeviceReadings(deviceId: string) {
-  return useQuery({
-    queryKey: ['deviceReadings', deviceId],
-    queryFn: () => apiClient.getDeviceReadings(deviceId),
-    enabled: !!deviceId,
-    refetchInterval: 60000, // Refetch every minute
-  });
-}

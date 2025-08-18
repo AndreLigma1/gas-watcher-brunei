@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
-import { TankDevice } from '@/types/device';
+import { Device } from '@/types/device';
 
 interface UseSearchProps {
-  data: TankDevice[];
+  data: Device[];
   searchFields?: string[];
 }
 
-export function useSearch({ data, searchFields = ['label', 'tankId', 'location', 'gasType'] }: UseSearchProps) {
+export function useSearch({ data, searchFields = ['id'] }: UseSearchProps) {
   const [query, setQuery] = useState('');
 
   const fuse = useMemo(() => {
