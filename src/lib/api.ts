@@ -1,6 +1,7 @@
 import { Device } from '@/types/device';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Use the direct backend API URL for development/testing
+const API_BASE_URL = 'http://192.168.123.129/api';
 
 export const apiClient = {
   async getDevices(): Promise<Device[]> {
