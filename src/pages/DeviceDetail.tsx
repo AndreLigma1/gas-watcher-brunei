@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDevice } from '@/hooks/useDevices';
+import { useDevice } from '../hooks/data';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,6 +11,7 @@ export default function DeviceDetail() {
   const navigate = useNavigate();
   
   const { data: device, isLoading: deviceLoading, error: deviceError } = useDevice(deviceId!);
+  // Readings functionality removed: useReadings is not available.
 
   if (deviceLoading) {
     return (
@@ -100,25 +101,7 @@ export default function DeviceDetail() {
             </div>
           </Card>
 
-          {/* Current Readings */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Current Readings</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-card rounded-lg border">
-                <Gauge className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-2xl font-bold">{device.tank_level}%</p>
-                <p className="text-sm text-muted-foreground">Tank Level</p>
-              </div>
-
-              <div className="text-center p-4 bg-card rounded-lg border">
-                <div className="h-8 w-8 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-bold text-primary">M</span>
-                </div>
-                <p className="text-2xl font-bold">{device.measurement}</p>
-                <p className="text-sm text-muted-foreground">Measurement</p>
-              </div>
-            </div>
-          </Card>
+          {/* Current Readings - removed, as readings API is not implemented */}
         </div>
       </div>
     </div>

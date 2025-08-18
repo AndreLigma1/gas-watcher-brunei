@@ -64,10 +64,19 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/19b11650-e91e-4d7b-924d-39926d2766e9) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
 
-Yes, you can!
+## Data & API
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+This site is read-only and fetches data from a backend API, with the base URL set by the environment variable `VITE_API_BASE_URL` (default `/api`).
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Device and reading data is fetched from `/api/devices`, `/api/devices/:id`, and `/api/readings?deviceId=...`.
+- Data is polled every 10 seconds for freshness.
+- Optionally, live updates can be received via SSE from `/api/stream`.
+
+Example `.env.production`:
+
+```
+VITE_API_BASE_URL=/api
+```
+
+Polling and SSE intervals are set for near real-time updates, but all data is read-only from the UI.
