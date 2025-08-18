@@ -3,8 +3,9 @@ import { useDevice } from '@/hooks/useDevices';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Gauge, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { TankLevel } from '@/components/tank-level';
 
 export default function DeviceDetail() {
   const { deviceId } = useParams<{ deviceId: string }>();
@@ -78,14 +79,6 @@ export default function DeviceDetail() {
             <h2 className="text-lg font-semibold mb-4">Device Information</h2>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Gauge className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Tank Level</p>
-                  <p className="font-medium">{device.tank_level}%</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Last Updated</p>
@@ -100,23 +93,17 @@ export default function DeviceDetail() {
             </div>
           </Card>
 
-          {/* Current Readings */}
+          {/* Tank Level & Readings */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Current Readings</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-card rounded-lg border">
-                <Gauge className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-2xl font-bold">{device.tank_level}%</p>
-                <p className="text-sm text-muted-foreground">Tank Level</p>
-              </div>
-
-              <div className="text-center p-4 bg-card rounded-lg border">
-                <div className="h-8 w-8 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-bold text-primary">M</span>
+            <h2 className="text-lg font-semibold mb-4">Tank Status</h2>
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Measurement</p>
+                  <p className="text-2xl font-bold">{device.measurement}</p>
                 </div>
-                <p className="text-2xl font-bold">{device.measurement}</p>
-                <p className="text-sm text-muted-foreground">Measurement</p>
               </div>
+              <TankLevel level={device.tank_level} size="lg" />
             </div>
           </Card>
         </div>

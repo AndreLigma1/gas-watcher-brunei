@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Device } from "@/types/device";
 import { formatDistanceToNow } from "date-fns";
-import { Gauge, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TankLevel } from "@/components/tank-level";
 
 interface DeviceCardProps {
   device: Device;
@@ -28,18 +29,13 @@ export function DeviceCard({ device, onClick }: DeviceCardProps) {
             <h3 className="font-semibold text-card-foreground">Device {id}</h3>
             <p className="text-sm text-muted-foreground">Measurement: {measurement}</p>
           </div>
+          <TankLevel level={tank_level} size="sm" />
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2">
-            <Gauge className="h-4 w-4 text-muted-foreground" />
-            <span>Tank Level: {tank_level}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
-          </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
         </div>
       </div>
     </Card>
