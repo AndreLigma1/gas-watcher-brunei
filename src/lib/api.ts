@@ -1,21 +1,30 @@
 import { Device } from '@/types/device';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Sample data for display purposes
+const sampleDevices: Device[] = [
+  {
+    id: "TANK-001",
+    measurement: 42.5,
+    tank_level: 78,
+    timestamp: new Date().toISOString(),
+  }
+];
 
 export const apiClient = {
   async getDevices(): Promise<Device[]> {
-    const response = await fetch(`${API_BASE_URL}/devices`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch devices');
-    }
-    return response.json();
+    // Return sample data for display purposes
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(sampleDevices), 500);
+    });
   },
 
   async getDevice(deviceId: string): Promise<Device | null> {
-    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`);
-    if (!response.ok) {
-      return null;
-    }
-    return response.json();
+    // Return sample device if it matches
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const device = sampleDevices.find(d => d.id === deviceId) || null;
+        resolve(device);
+      }, 300);
+    });
   }
 };
