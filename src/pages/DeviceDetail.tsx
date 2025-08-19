@@ -79,71 +79,14 @@ export default function DeviceDetail() {
             <h2 className="text-3xl font-bold mb-2">Tank Level Status</h2>
             <p className="text-muted-foreground">Real-time monitoring data</p>
           </div>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between md:space-y-0 space-y-8">
-            {/* Tank left aligned */}
-            <div className="flex flex-col items-center md:items-start md:w-1/2">
-              <TankLevel level={device.measurement} size="lg" className="scale-[2] md:scale-[2.5]" />
-              <p className="text-5xl md:text-6xl font-bold text-primary mt-8">{device.measurement}%</p>
-              <p className="text-xl text-muted-foreground">Current Tank Percentage</p>
-              <p className="text-lg text-muted-foreground">{device.tank_level_cm} cm</p>
+          <div className="flex flex-col items-center space-y-8">
+            <div className="relative">
+              <TankLevel level={device.tank_level} size="lg" className="scale-[2] md:scale-[2.5]" />
             </div>
-            {/* Details right side */}
-            <div className="flex flex-col items-center md:items-end md:w-1/2 space-y-4 mt-8 md:mt-0">
-              <Card className="p-6 w-full max-w-xs">
-                <h3 className="text-lg font-semibold mb-4">Device Details</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Device ID</p>
-                    <p className="font-medium text-lg">{device.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tank Level (cm)</p>
-                    <p className="font-medium text-lg">{device.tank_level_cm} cm</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Percentage</p>
-                    <p className="font-medium text-lg">{device.measurement}%</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-6 w-full max-w-xs">
-                <h3 className="text-lg font-semibold mb-4">Last Updated</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">
-                        {formatDistanceToNow(new Date(device.timestamp), { addSuffix: true })}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatInTimeZone(new Date(device.timestamp), 'Asia/Brunei', 'PPpp')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Brunei Time</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-6 w-full max-w-xs">
-                <h3 className="text-lg font-semibold mb-4">Tank Status</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <p className={`font-medium text-lg ${
-                      device.measurement >= 70 ? 'text-green-600' : 
-                      device.measurement >= 30 ? 'text-yellow-600' : 
-                      'text-red-600'
-                    }`}>
-                      {device.measurement >= 70 ? 'High' : 
-                       device.measurement >= 30 ? 'Medium' : 
-                       'Low'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Level</p>
-                    <p className="font-medium text-lg">{device.measurement}%</p>
-                  </div>
-                </div>
-              </Card>
+            <div className="text-center space-y-4 mt-16 md:mt-20">
+              <p className="text-5xl md:text-6xl font-bold text-primary">{device.tank_level}%</p>
+              <p className="text-xl text-muted-foreground">Current Tank Level</p>
+              <p className="text-lg text-muted-foreground">{device.tank_level_cm} cm</p>
             </div>
           </div>
         </Card>
