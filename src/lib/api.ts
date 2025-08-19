@@ -19,8 +19,9 @@ export const apiClient = {
 
     return data.map((d: any) => ({
       id: String(d.id),
-      measurement: Number(d.measurement),
-      tank_level: Number(d.measurement), // measurement is the percentage value
+      measurement: Number(d.measurement), // percentage value
+      tank_level_cm: Number(d.tank_level), // tank level in cm
+      tank_level: Number(d.measurement), // use measurement as percentage for display
       timestamp: String(d.timestamp),
     })) as Device[];
   },
@@ -36,8 +37,9 @@ export const apiClient = {
         if (d && d.id !== undefined) {
           return {
             id: String(d.id),
-            measurement: Number(d.measurement),
-            tank_level: Number(d.measurement), // measurement is the percentage value
+            measurement: Number(d.measurement), // percentage value
+            tank_level_cm: Number(d.tank_level), // tank level in cm
+            tank_level: Number(d.measurement), // use measurement as percentage for display
             timestamp: String(d.timestamp),
           } as Device;
         }
