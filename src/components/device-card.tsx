@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Device } from "@/types/device";
 import { formatDistanceToNow } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TankLevel } from "@/components/tank-level";
@@ -27,7 +28,7 @@ export function DeviceCard({ device, onClick }: DeviceCardProps) {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-semibold text-card-foreground">Device {id}</h3>
-            <p className="text-sm text-muted-foreground">Measurement: {measurement}</p>
+            <p className="text-sm text-muted-foreground">Tank Level: {tank_level}%</p>
           </div>
           <TankLevel level={tank_level} size="sm" />
         </div>
@@ -35,7 +36,9 @@ export function DeviceCard({ device, onClick }: DeviceCardProps) {
         {/* Metrics */}
         <div className="flex items-center gap-2 text-sm">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
+          <span title={formatInTimeZone(new Date(timestamp), 'Asia/Brunei', 'PPpp')}>
+            {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
+          </span>
         </div>
       </div>
     </Card>

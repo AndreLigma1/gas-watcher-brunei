@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { TankLevel } from '@/components/tank-level';
 
 export default function DeviceDetail() {
@@ -64,7 +65,7 @@ export default function DeviceDetail() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Device {device.id}</h1>
-              <p className="text-muted-foreground">Measurement: {device.measurement}</p>
+              <p className="text-muted-foreground">Tank Level: {device.tank_level}%</p>
             </div>
           </div>
         </div>
@@ -72,38 +73,77 @@ export default function DeviceDetail() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto p-4 space-y-6">
-        {/* Overview Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Main Tank Display */}
+        <Card className="p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-2">Tank Level Status</h2>
+            <p className="text-muted-foreground">Real-time monitoring data</p>
+          </div>
+          <div className="flex flex-col items-center space-y-6">
+            <TankLevel level={device.tank_level} size="lg" className="scale-150" />
+            <div className="text-center space-y-2">
+              <p className="text-4xl font-bold text-primary">{device.tank_level}%</p>
+              <p className="text-lg text-muted-foreground">Current Tank Level</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Details Grid */}
+        <div className="grid gap-6 md:grid-cols-3">
           {/* Device Info */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Device Information</h2>
-            <div className="space-y-4">
+            <h3 className="text-lg font-semibold mb-4">Device Details</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Device ID</p>
+                <p className="font-medium text-lg">{device.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Raw Measurement</p>
+                <p className="font-medium text-lg">{device.measurement}</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Last Updated */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Last Updated</h3>
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Last Updated</p>
                   <p className="font-medium">
                     {formatDistanceToNow(new Date(device.timestamp), { addSuffix: true })}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(device.timestamp), 'PPpp')}
+                  <p className="text-sm text-muted-foreground">
+                    {formatInTimeZone(new Date(device.timestamp), 'Asia/Brunei', 'PPpp')}
                   </p>
+                  <p className="text-xs text-muted-foreground">Brunei Time</p>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Tank Level & Readings */}
+          {/* Status */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Tank Status</h2>
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Measurement</p>
-                  <p className="text-2xl font-bold">{device.measurement}</p>
-                </div>
+            <h3 className="text-lg font-semibold mb-4">Tank Status</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className={`font-medium text-lg ${
+                  device.tank_level >= 70 ? 'text-green-600' : 
+                  device.tank_level >= 30 ? 'text-yellow-600' : 
+                  'text-red-600'
+                }`}>
+                  {device.tank_level >= 70 ? 'High' : 
+                   device.tank_level >= 30 ? 'Medium' : 
+                   'Low'}
+                </p>
               </div>
-              <TankLevel level={device.tank_level} size="lg" />
+              <div>
+                <p className="text-sm text-muted-foreground">Level</p>
+                <p className="font-medium text-lg">{device.tank_level}%</p>
+              </div>
             </div>
           </Card>
         </div>
