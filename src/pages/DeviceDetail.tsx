@@ -79,12 +79,11 @@ export default function DeviceDetail() {
             <h2 className="text-3xl font-bold mb-2">Tank Level Status</h2>
             <p className="text-muted-foreground">Real-time monitoring data</p>
           </div>
-          <div className="flex flex-col items-center space-y-8">
-            <div className="relative">
+          <div className="flex flex-col md:flex-row items-center md:items-start justify-center gap-12">
+            <div className="relative flex-shrink-0">
               <TankLevel level={device.tank_level} size="lg" className="scale-[2] md:scale-[2.5]" />
             </div>
-            <div className="text-center space-y-4 mt-16 md:mt-20">
-              <p className="text-5xl md:text-6xl font-bold text-primary">{device.tank_level}%</p>
+            <div className="text-center md:text-left space-y-4 mt-16 md:mt-0">
               <p className="text-xl text-muted-foreground">Current Tank Level</p>
               <p className="text-lg text-muted-foreground">{device.tank_level_cm} cm</p>
             </div>
