@@ -65,7 +65,7 @@ export default function DeviceDetail() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Device {device.id}</h1>
-              <p className="text-muted-foreground">Tank Level: {device.tank_level}%</p>
+              <p className="text-muted-foreground">Tank: {device.measurement}% &bull; {device.tank_level_cm} cm</p>
             </div>
           </div>
         </div>
@@ -81,11 +81,11 @@ export default function DeviceDetail() {
           </div>
           <div className="flex flex-col items-center space-y-8">
             <div className="relative">
-              <TankLevel level={device.tank_level} size="lg" className="scale-[2] md:scale-[2.5]" />
+              <TankLevel level={device.measurement} size="lg" className="scale-[2] md:scale-[2.5]" />
             </div>
             <div className="text-center space-y-4 mt-16 md:mt-20">
-              <p className="text-5xl md:text-6xl font-bold text-primary">{device.tank_level}%</p>
-              <p className="text-xl text-muted-foreground">Current Tank Level</p>
+              <p className="text-5xl md:text-6xl font-bold text-primary">{device.measurement}%</p>
+              <p className="text-xl text-muted-foreground">Current Tank Percentage</p>
               <p className="text-lg text-muted-foreground">{device.tank_level_cm} cm</p>
             </div>
           </div>
@@ -138,18 +138,18 @@ export default function DeviceDetail() {
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <p className={`font-medium text-lg ${
-                  device.tank_level >= 70 ? 'text-green-600' : 
-                  device.tank_level >= 30 ? 'text-yellow-600' : 
+                  device.measurement >= 70 ? 'text-green-600' : 
+                  device.measurement >= 30 ? 'text-yellow-600' : 
                   'text-red-600'
                 }`}>
-                  {device.tank_level >= 70 ? 'High' : 
-                   device.tank_level >= 30 ? 'Medium' : 
+                  {device.measurement >= 70 ? 'High' : 
+                   device.measurement >= 30 ? 'Medium' : 
                    'Low'}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Level</p>
-                <p className="font-medium text-lg">{device.tank_level}%</p>
+                <p className="font-medium text-lg">{device.measurement}%</p>
               </div>
             </div>
           </Card>

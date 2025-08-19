@@ -12,11 +12,11 @@ interface DeviceCardProps {
 }
 
 export function DeviceCard({ device, onClick }: DeviceCardProps) {
-  const { id, measurement, tank_level, timestamp } = device;
+  const { id, measurement, tank_level_cm, timestamp } = device;
   const isClickable = !!onClick;
 
   return (
-    <Card 
+    <Card
       className={cn(
         "p-4 transition-all duration-200 hover:shadow-md",
         isClickable && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
@@ -28,9 +28,9 @@ export function DeviceCard({ device, onClick }: DeviceCardProps) {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-semibold text-card-foreground">Device {id}</h3>
-            <p className="text-sm text-muted-foreground">Tank Level: {tank_level}%</p>
+            <p className="text-sm text-muted-foreground">Tank: {measurement}% &bull; {tank_level_cm} cm</p>
           </div>
-          <TankLevel level={tank_level} size="sm" />
+          <TankLevel level={measurement} size="sm" />
         </div>
 
         {/* Metrics */}
