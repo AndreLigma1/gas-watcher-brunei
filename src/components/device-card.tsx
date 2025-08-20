@@ -3,7 +3,7 @@ import { Device } from "@/types/device";
 import { formatDistanceToNow } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, GLOBAL_TIMEZONE } from "@/lib/utils";
 import { TankLevel } from "@/components/tank-level";
 
 interface DeviceCardProps {
@@ -36,7 +36,7 @@ export function DeviceCard({ device, onClick }: DeviceCardProps) {
         {/* Metrics */}
         <div className="flex items-center gap-2 text-sm">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span title={formatInTimeZone(new Date(timestamp), 'Asia/Brunei', 'PPpp')}>
+          <span title={formatInTimeZone(new Date(timestamp), GLOBAL_TIMEZONE, 'PPpp')}>
             {formatDistanceToNow(new Date(timestamp), { addSuffix: true })}
           </span>
         </div>

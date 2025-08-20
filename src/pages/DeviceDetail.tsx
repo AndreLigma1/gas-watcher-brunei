@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
+import { GLOBAL_TIMEZONE } from '@/lib/utils';
 import { TankLevel } from '@/components/tank-level';
 
 export default function DeviceDetail() {
@@ -125,7 +126,7 @@ export default function DeviceDetail() {
                     {formatDistanceToNow(new Date(device.timestamp), { addSuffix: true })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {formatInTimeZone(new Date(device.timestamp), 'Asia/Brunei', 'PPpp')}
+                    {formatInTimeZone(new Date(device.timestamp), GLOBAL_TIMEZONE, 'PPpp')}
                   </p>
                   <p className="text-xs text-muted-foreground">Brunei Time</p>
                 </div>
