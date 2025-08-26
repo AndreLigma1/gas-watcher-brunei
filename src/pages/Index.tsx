@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDevices } from '@/hooks/useDevices';
 import { useSearch } from '@/hooks/useSearch';
@@ -10,19 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle } from 'lucide-react';
 
-// Placeholder filter options (replace with API data as needed)
-const MANUFACTURERS = [
-  { id: 'm1', name: 'Manufacturer 1' },
-  { id: 'm2', name: 'Manufacturer 2' },
-];
-const DISTRIBUTORS = [
-  { id: 'd1', name: 'Distributor 1' },
-  { id: 'd2', name: 'Distributor 2' },
-];
-const CONSUMERS = [
-  { id: 'c1', name: 'Consumer 1' },
-  { id: 'c2', name: 'Consumer 2' },
-];
+import { fetchFilterOptions } from '@/lib/fetchFilterOptions';
 
 
 const Index = () => {
@@ -31,6 +19,28 @@ const Index = () => {
   // Only one filter can be active at a time
   const [filterType, setFilterType] = useState<'manufacturer' | 'distributor' | 'consumer' | null>(null);
   const [filterId, setFilterId] = useState<string>('');
+
+  // Filter options from API
+  const [manufacturers, setManufacturers] = useState<{ id: string; name: string }[]>([]);
+  const [distributors, setDistributors] = useState<{ id: string; name: string }[]>([]);
+  const [consumers, setConsumers] = useState<{ id: string; name: string }[]>([]);
+  const [filtersLoading, setFiltersLoading] = useState(true);
+  const [filtersError, setFiltersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFiltersLoading(true);
+    fetchFilterOptions()
+      .then(({ manufacturers, distributors, consumers }) => {
+        setManufacturers(manufacturers);
+        setDistributors(distributors);
+        setConsumers(consumers);
+        setFiltersLoading(false);
+      })
+      .catch((e) => {
+        setFiltersError('Failed to load filter options');
+        setFiltersLoading(false);
+      });
+  }, []);
 
   // Build filter object for useDevices hook
   const filterObj =
@@ -117,9 +127,10 @@ const Index = () => {
                   setFilterType('manufacturer');
                   setFilterId(e.target.value);
                 }}
+                disabled={filtersLoading}
               >
                 <option value="">Manufacturer</option>
-                {MANUFACTURERS.map(m => (
+                {manufacturers.map(m => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
@@ -131,9 +142,10 @@ const Index = () => {
                   setFilterType('distributor');
                   setFilterId(e.target.value);
                 }}
+                disabled={filtersLoading}
               >
                 <option value="">Distributor</option>
-                {DISTRIBUTORS.map(d => (
+                {distributors.map(d => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
@@ -145,9 +157,10 @@ const Index = () => {
                   setFilterType('consumer');
                   setFilterId(e.target.value);
                 }}
+                disabled={filtersLoading}
               >
                 <option value="">Consumer</option>
-                {CONSUMERS.map(c => (
+                {consumers.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -161,6 +174,9 @@ const Index = () => {
                 </button>
               )}
             </div>
+      {filtersError && (
+        <div className="text-red-500 text-sm mt-2">{filtersError}</div>
+      )}
           </div>
         </div>
       </div>
