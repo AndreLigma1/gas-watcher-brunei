@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDevices } from '@/hooks/useDevices';
@@ -9,10 +10,37 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle } from 'lucide-react';
 
+// Placeholder filter options (replace with API data as needed)
+const MANUFACTURERS = [
+  { id: 'm1', name: 'Manufacturer 1' },
+  { id: 'm2', name: 'Manufacturer 2' },
+];
+const DISTRIBUTORS = [
+  { id: 'd1', name: 'Distributor 1' },
+  { id: 'd2', name: 'Distributor 2' },
+];
+const CONSUMERS = [
+  { id: 'c1', name: 'Consumer 1' },
+  { id: 'c2', name: 'Consumer 2' },
+];
+
+
 const Index = () => {
   const navigate = useNavigate();
-  const { data: devices, isLoading, error } = useDevices();
-  const { query, setQuery, results } = useSearch({ 
+
+  // Only one filter can be active at a time
+  const [filterType, setFilterType] = useState<'manufacturer' | 'distributor' | 'consumer' | null>(null);
+  const [filterId, setFilterId] = useState<string>('');
+
+  // Build filter object for useDevices hook
+  const filterObj =
+    filterType === 'manufacturer' && filterId ? { manufacturer_id: filterId } :
+    filterType === 'distributor' && filterId ? { distributor_id: filterId } :
+    filterType === 'consumer' && filterId ? { consumer_id: filterId } :
+    undefined;
+
+  const { data: devices, isLoading, error } = useDevices(filterObj);
+  const { query, setQuery, results } = useSearch({
     data: devices || [],
     searchFields: ['id']
   });
@@ -71,14 +99,67 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Search */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          {/* Filters & Search */}
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
-              <SearchBar 
-                value={query} 
+              <SearchBar
+                value={query}
                 onChange={setQuery}
                 placeholder="Search by device ID..."
               />
+            </div>
+            <div className="flex gap-2">
+              {/* Manufacturer filter */}
+              <select
+                className="border rounded px-2 py-1"
+                value={filterType === 'manufacturer' ? filterId : ''}
+                onChange={e => {
+                  setFilterType('manufacturer');
+                  setFilterId(e.target.value);
+                }}
+              >
+                <option value="">Manufacturer</option>
+                {MANUFACTURERS.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+              {/* Distributor filter */}
+              <select
+                className="border rounded px-2 py-1"
+                value={filterType === 'distributor' ? filterId : ''}
+                onChange={e => {
+                  setFilterType('distributor');
+                  setFilterId(e.target.value);
+                }}
+              >
+                <option value="">Distributor</option>
+                {DISTRIBUTORS.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+              {/* Consumer filter */}
+              <select
+                className="border rounded px-2 py-1"
+                value={filterType === 'consumer' ? filterId : ''}
+                onChange={e => {
+                  setFilterType('consumer');
+                  setFilterId(e.target.value);
+                }}
+              >
+                <option value="">Consumer</option>
+                {CONSUMERS.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              {/* Clear filter button */}
+              {(filterType && filterId) && (
+                <button
+                  className="ml-2 px-2 py-1 border rounded text-xs bg-muted hover:bg-muted/70"
+                  onClick={() => { setFilterType(null); setFilterId(''); }}
+                >
+                  Clear Filter
+                </button>
+              )}
             </div>
           </div>
         </div>
