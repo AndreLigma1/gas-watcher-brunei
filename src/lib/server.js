@@ -17,9 +17,33 @@ if (!DATABASE_URL) {
 }
 const pool = new Pool({ connectionString: DATABASE_URL });
 
-/** Health + DB time */
-app.get("/health", (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
-app.get("/db-time", async (_req, res) => {
+/* ------------------------------ Utilities ------------------------------ */
+
+function parseLimitOffset(req, defLimit = 100, maxLimit = 1000) {
+  const limit = Math.min(parseInt(req.query.limit) || defLimit, maxLimit);
+  const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+  return { limit, offset };
+}
+function parseSearch(req) {
+  const q = (req.query.q || "").toString().trim();
+  return q ? `%${q}%` : null;
+}
+function dirSql(s) {
+  return (s || "").toString().toUpperCase() === "ASC" ? "ASC" : "DESC";
+}
+// Mount the same handler on both /api/... and /...
+function mountGet(paths, handler) {
+  const arr = Array.isArray(paths) ? paths : [paths];
+  for (const p of arr) app.get(p, handler);
+}
+
+/* ------------------------------ Health --------------------------------- */
+
+mountGet(["/health", "/api/health"], (_req, res) =>
+  res.json({ ok: true, time: new Date().toISOString() })
+);
+
+mountGet(["/db-time", "/api/db-time"], async (_req, res) => {
   try {
     const r = await pool.query("SELECT NOW() as now");
     res.json({ ok: true, now: r.rows[0].now });
@@ -28,14 +52,12 @@ app.get("/db-time", async (_req, res) => {
   }
 });
 
-/** 1) Latest row per device (fast list for dashboard)
- *  GET /latest
- *  ?limit=100   (max devices returned)
- */
-app.get("/devices/latest", async (req, res) => {
+/* ------------------------------ Devices (existing) ---------------------- */
+
+// 1) Latest row per device (fast list for dashboard)
+mountGet(["/devices/latest", "/api/devices/latest"], async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 200, 1000);
   try {
-    // DISTINCT ON picks the newest row for each id (Postgres)
     const q = `
       SELECT DISTINCT ON (id)
              id, measurement, tank_level, "timestamp"
@@ -50,79 +72,63 @@ app.get("/devices/latest", async (req, res) => {
   }
 });
 
-/** 2) Paged feed of all rows (newest first) with filtering
- *  GET /devices
- *  ?limit=100&offset=0
- *  ?manufacturer_id=...&distributor_id=...&consumer_id=...
- */
-app.get("/devices", async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 100, 5000);
-  const offset = Math.max(parseInt(req.query.offset) || 0, 0);
-
-  // Filtering parameters
+// 2) Paged feed of all rows (newest first)
+mountGet(["/devices", "/api/devices"], async (req, res) => {
+  const { limit, offset } = parseLimitOffset(req, 100, 5000);
   const { manufacturer_id, distributor_id, consumer_id } = req.query;
-  const filters = [];
-  const values = [];
+  let joins = '';
+  let where = '';
+  let values = [];
   let idx = 1;
 
-  // Join clauses if filtering
-  let joinClause = "";
-
   if (manufacturer_id) {
-    joinClause += `
-      JOIN consumer ON devices.consumer_id = consumer.id
-      JOIN distributor ON consumer.distributor_id = distributor.id
-      JOIN manufacturer ON distributor.manufacturer_id = manufacturer.id
+    joins = `
+      JOIN consumer ON devices.consumer_id = consumer.consumer_id
+      JOIN distributor ON consumer.distributor_id = distributor.distributor_id
+      JOIN manufacturer ON distributor.manufacturer_id = manufacturer.manufacturer_id
     `;
-    filters.push(`manufacturer.id = $${idx++}`);
+    where = `WHERE manufacturer.manufacturer_id = $${idx++}`;
     values.push(manufacturer_id);
   } else if (distributor_id) {
-    joinClause += `
-      JOIN consumer ON devices.consumer_id = consumer.id
-      JOIN distributor ON consumer.distributor_id = distributor.id
+    joins = `
+      JOIN consumer ON devices.consumer_id = consumer.consumer_id
+      JOIN distributor ON consumer.distributor_id = distributor.distributor_id
     `;
-    filters.push(`distributor.id = $${idx++}`);
+    where = `WHERE distributor.distributor_id = $${idx++}`;
     values.push(distributor_id);
   } else if (consumer_id) {
-    joinClause += `
-      JOIN consumer ON devices.consumer_id = consumer.id
+    joins = `
+      JOIN consumer ON devices.consumer_id = consumer.consumer_id
     `;
-    filters.push(`consumer.id = $${idx++}`);
+    where = `WHERE consumer.consumer_id = $${idx++}`;
     values.push(consumer_id);
   }
 
-  let whereClause = "";
-  if (filters.length > 0) {
-    whereClause = "WHERE " + filters.join(" AND ");
-  }
+  values.push(limit, offset);
 
   try {
     const q = `
       SELECT devices.id, devices.measurement, devices.tank_level, devices."timestamp"
       FROM devices
-      ${joinClause}
-      ${whereClause}
+      ${joins}
+      ${where}
       ORDER BY devices."timestamp" DESC
       LIMIT $${idx++} OFFSET $${idx}
     `;
-    values.push(limit, offset);
     const { rows } = await pool.query(q, values);
     res.json(rows);
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
-/** 3) History for one device
- *  GET /devices/:id
- *  ?since=24h  (supports 15m, 6h, 7d or ISO 2025-08-18T03:00:00Z)
- *  ?limit=1000
- */
-app.get("/devices/:id", async (req, res) => {
+
+// 3) History for one device
+mountGet(["/devices/:id", "/api/devices/:id"], async (req, res) => {
   const id = req.params.id;
   const limit = Math.min(parseInt(req.query.limit) || 1000, 10000);
   const since = String(req.query.since || "24h");
 
-  // Compute cutoff
+  // Compute cutoff time
   let cutoff = new Date(Date.now() - 24 * 3600 * 1000);
   if (/^\d+\s*(m|min|h|hour|d|day|days)$/i.test(since)) {
     const n = parseInt(since, 10);
@@ -149,34 +155,195 @@ app.get("/devices/:id", async (req, res) => {
   }
 });
 
-/**
- * Filter endpoints for dropdowns
- */
-app.get('/manufacturers', async (_req, res) => {
+
+/* ---------------------- Manufacturer / Distributor / Consumer ----------- */
+/* All list endpoints support:
+   - ?limit=&offset=
+   - ?q= (search across name fields, and joined names where relevant)
+   - ?sort=&dir= (safe whitelist — defaults shown below)
+*/
+
+// --- Manufacturers ---
+mountGet(["/manufacturers", "/api/manufacturers"], async (req, res) => {
+  const { limit, offset } = parseLimitOffset(req, 100, 1000);
+  const search = parseSearch(req);
+  const sortMap = {
+    manufacturer_id: "m.manufacturer_id",
+    name: "m.name",
+    created_at: "m.created_at",
+    updated_at: "m.updated_at",
+  };
+  const sort = sortMap[req.query.sort] || "m.manufacturer_id";
+  const dir = dirSql(req.query.dir);
+
+  const values = [];
+  let where = "";
+  if (search) {
+    values.push(search);
+    where = "WHERE m.name ILIKE $1";
+  }
+  values.push(limit, offset);
+
+  const sql = `
+    SELECT m.manufacturer_id, m.name, m.created_at, m.updated_at
+    FROM manufacturer m
+    ${where}
+    ORDER BY ${sort} ${dir}
+    LIMIT $${values.length - 1} OFFSET $${values.length}
+  `;
   try {
-    const { rows } = await pool.query('SELECT id, name FROM manufacturer ORDER BY name ASC');
-    res.json(rows);
+    const { rows } = await pool.query(sql, values);
+    res.json({ ok: true, items: rows, next_offset: rows.length === limit ? offset + rows.length : null });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
 
-app.get('/distributors', async (_req, res) => {
+mountGet(["/manufacturers/:id", "/api/manufacturers/:id"], async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT id, name FROM distributor ORDER BY name ASC');
-    res.json(rows);
+    const { rows } = await pool.query(
+      `SELECT m.manufacturer_id, m.name, m.created_at, m.updated_at
+       FROM manufacturer m WHERE m.manufacturer_id = $1 LIMIT 1`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, item: rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
 
-app.get('/consumers', async (_req, res) => {
+// --- Distributors (joined with manufacturer name) ---
+mountGet(["/distributors", "/api/distributors"], async (req, res) => {
+  const { limit, offset } = parseLimitOffset(req, 100, 1000);
+  const search = parseSearch(req);
+  const sortMap = {
+    distributor_id: "d.distributor_id",
+    name: "d.name",
+    manufacturer_id: "d.manufacturer_id",
+    manufacturer_name: "m.name",
+    created_at: "d.created_at",
+    updated_at: "d.updated_at",
+  };
+  const sort = sortMap[req.query.sort] || "d.distributor_id";
+  const dir = dirSql(req.query.dir);
+
+  const values = [];
+  let where = "";
+  if (search) {
+    values.push(search, search);
+    where = "WHERE d.name ILIKE $1 OR m.name ILIKE $2";
+  }
+  values.push(limit, offset);
+
+  const sql = `
+    SELECT
+      d.distributor_id, d.name,
+      d.manufacturer_id, m.name AS manufacturer_name,
+      d.created_at, d.updated_at
+    FROM distributor d
+    JOIN manufacturer m ON d.manufacturer_id = m.manufacturer_id
+    ${where}
+    ORDER BY ${sort} ${dir}
+    LIMIT $${values.length - 1} OFFSET $${values.length}
+  `;
   try {
-    const { rows } = await pool.query('SELECT id, name FROM consumer ORDER BY name ASC');
-    res.json(rows);
+    const { rows } = await pool.query(sql, values);
+    res.json({ ok: true, items: rows, next_offset: rows.length === limit ? offset + rows.length : null });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
+
+mountGet(["/distributors/:id", "/api/distributors/:id"], async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         d.distributor_id, d.name,
+         d.manufacturer_id, m.name AS manufacturer_name,
+         d.created_at, d.updated_at
+       FROM distributor d
+       JOIN manufacturer m ON d.manufacturer_id = m.manufacturer_id
+       WHERE d.distributor_id = $1
+       LIMIT 1`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, item: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- Consumers (joined with distributor & manufacturer names) ---
+mountGet(["/consumers", "/api/consumers"], async (req, res) => {
+  const { limit, offset } = parseLimitOffset(req, 100, 1000);
+  const search = parseSearch(req);
+  const sortMap = {
+    consumer_id: "c.consumer_id",
+    name: "c.name",
+    distributor_id: "c.distributor_id",
+    distributor_name: "d.name",
+    manufacturer_id: "d.manufacturer_id",
+    manufacturer_name: "m.name",
+    created_at: "c.created_at",
+    updated_at: "c.updated_at",
+  };
+  const sort = sortMap[req.query.sort] || "c.consumer_id";
+  const dir = dirSql(req.query.dir);
+
+  const values = [];
+  let where = "";
+  if (search) {
+    // Search across consumer, distributor, and manufacturer names
+    values.push(search, search, search);
+    where = "WHERE c.name ILIKE $1 OR d.name ILIKE $2 OR m.name ILIKE $3";
+  }
+  values.push(limit, offset);
+
+  const sql = `
+    SELECT
+      c.consumer_id, c.name,
+      c.distributor_id, d.name AS distributor_name,
+      d.manufacturer_id, m.name AS manufacturer_name,
+      c.created_at, c.updated_at
+    FROM consumer c
+    JOIN distributor d  ON c.distributor_id = d.distributor_id
+    JOIN manufacturer m ON d.manufacturer_id = m.manufacturer_id
+    ${where}
+    ORDER BY ${sort} ${dir}
+    LIMIT $${values.length - 1} OFFSET $${values.length}
+  `;
+  try {
+    const { rows } = await pool.query(sql, values);
+    res.json({ ok: true, items: rows, next_offset: rows.length === limit ? offset + rows.length : null });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         c.consumer_id, c.name,
+         c.distributor_id, d.name AS distributor_name,
+         d.manufacturer_id, m.name AS manufacturer_name,
+         c.created_at, c.updated_at
+       FROM consumer c
+       JOIN distributor d  ON c.distributor_id = d.distributor_id
+       JOIN manufacturer m ON d.manufacturer_id = m.manufacturer_id
+       WHERE c.consumer_id = $1
+       LIMIT 1`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, item: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/* ------------------------------ Start ---------------------------------- */
 
 app.listen(PORT, () => console.log(`API on ${PORT}`));

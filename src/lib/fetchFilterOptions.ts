@@ -3,9 +3,9 @@ export async function fetchFilterOptions() {
   const BASE_URL = 'http://192.168.123.129/api';
   // Use the new endpoints and response structure
   const [manRes, distRes, consRes] = await Promise.all([
-    fetch(`${BASE_URL}/manufacturer`).then(r => r.json()),
-    fetch(`${BASE_URL}/distributor`).then(r => r.json()),
-    fetch(`${BASE_URL}/consumer`).then(r => r.json()),
+    fetch(`${BASE_URL}/manufacturers`).then(r => r.json()),
+    fetch(`${BASE_URL}/distributors`).then(r => r.json()),
+    fetch(`${BASE_URL}/consumers`).then(r => r.json()),
   ]);
 
   // Each response is { ok: true, items: [...] }
