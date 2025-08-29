@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import DeviceDetail from "./pages/DeviceDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -36,6 +37,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
           <Route path="/device/:deviceId" element={<RequireAuth><DeviceDetail /></RequireAuth>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

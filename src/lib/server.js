@@ -1,6 +1,9 @@
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
 const { Pool, types } = pkg;
 
 // Parse NUMERIC as float (pg sends NUMERIC as string by default)
@@ -347,8 +350,29 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
 /* ------------------------------ Start ---------------------------------- */
 
 
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+// --- Register endpoint ---
+app.post(["/register", "/api/register"], async (req, res) => {
+  const { name, password, role } = req.body;
+  if (!name || !password || !role) {
+    return res.status(400).json({ ok: false, error: "Missing name, password, or role" });
+  }
+  try {
+    // Check if user exists
+    const exists = await pool.query("SELECT 1 FROM consumer WHERE name = $1", [name]);
+    if (exists.rows.length) {
+      return res.status(409).json({ ok: false, error: "Username already exists" });
+    }
+    // Hash password
+    const hash = await bcrypt.hash(password, 10);
+    // For demo, assign distributor_id=1 (adjust as needed)
+    const distributor_id = 1;
+    const q = `INSERT INTO consumer (name, password, role, distributor_id) VALUES ($1, $2, $3, $4) RETURNING consumer_id, name, role`;
+    const { rows } = await pool.query(q, [name, hash, role, distributor_id]);
+    res.json({ ok: true, user: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // --- Login endpoint ---
 app.post(["/login", "/api/login"], async (req, res) => {

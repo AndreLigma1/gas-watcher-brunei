@@ -1,27 +1,39 @@
-
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const LoginPage = () => {
-  const { login, error, loading } = useAuth();
+const RegisterPage = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await login(name, password);
-    if (res && res.ok) setSuccess(true);
+    setLoading(true);
+    setError("");
+    setSuccess(false);
+    try {
+      await axios.post("/api/register", { name, password, role });
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (e: any) {
+      setError(e.response?.data?.error || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="p-8 w-full max-w-sm">
-        <h2 className="text-xl font-bold mb-4">Login</h2>
+        <h2 className="text-xl font-bold mb-4">Register</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             placeholder="Username"
@@ -37,18 +49,23 @@ const LoginPage = () => {
             onChange={e => setPassword(e.target.value)}
             required
           />
+          <select
+            className="border rounded px-2 py-1 w-full"
+            value={role}
+            onChange={e => setRole(e.target.value)}
+          >
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Registering..." : "Register"}
           </Button>
           {error && <div className="text-red-500 text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-sm">Login successful!</div>}
+          {success && <div className="text-green-600 text-sm">Registration successful! Redirecting to login...</div>}
         </form>
-        <div className="mt-4 text-center text-sm">
-          Don't have an account? <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
-        </div>
       </Card>
     </div>
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
