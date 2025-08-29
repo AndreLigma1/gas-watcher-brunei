@@ -346,4 +346,41 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
 
 /* ------------------------------ Start ---------------------------------- */
 
+
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+// --- Login endpoint ---
+app.post(["/login", "/api/login"], async (req, res) => {
+  const { name, password } = req.body;
+  if (!name || !password) {
+    return res.status(400).json({ ok: false, error: "Missing name or password" });
+  }
+  try {
+    const q = `SELECT consumer_id, name, password, role FROM consumer WHERE name = $1 LIMIT 1`;
+    const { rows } = await pool.query(q, [name]);
+    if (!rows.length) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+    const user = rows[0];
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+    // Create JWT
+    const token = jwt.sign(
+      { consumer_id: user.consumer_id, name: user.name, role: user.role },
+      process.env.JWT_SECRET || "devsecret",
+      { expiresIn: "7d" }
+    );
+    res.json({
+      ok: true,
+      token,
+      user: { consumer_id: user.consumer_id, name: user.name, role: user.role }
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`API on ${PORT}`));
