@@ -5,13 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const LoginPage = () => {
-  const { login, error, loading } = useAuth();
+  const { user, login, error, loading } = useAuth();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
