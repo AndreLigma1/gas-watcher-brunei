@@ -26,8 +26,10 @@ export function useAuth() {
     setError(null);
     try {
       const res = await axios.post("/api/login", { name, password });
-      setUser(res.data.user);
       localStorage.setItem("token", res.data.token);
+      // Set user from decoded JWT for immediate redirect
+      const decoded: any = jwtDecode(res.data.token);
+      setUser({ ...decoded });
       setLoading(false);
       return res.data;
     } catch (e: any) {
