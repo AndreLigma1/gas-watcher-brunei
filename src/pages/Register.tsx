@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRoles } from "@/hooks/useRoles";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,8 @@ import { useNavigate } from "react-router-dom";
 const RegisterPage = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("");
+  const { roles, loading: rolesLoading, error: rolesError } = useRoles();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,10 +55,15 @@ const RegisterPage = () => {
             className="border rounded px-2 py-1 w-full"
             value={role}
             onChange={e => setRole(e.target.value)}
+            required
+            disabled={rolesLoading}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            <option value="" disabled>Select role</option>
+            {roles.map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
           </select>
+          {rolesError && <div className="text-red-500 text-sm">{rolesError}</div>}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Registering..." : "Register"}
           </Button>
