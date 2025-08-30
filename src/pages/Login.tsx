@@ -4,18 +4,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const { login, error, loading } = useAuth();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await login(name, password);
-    if (res && res.ok) setSuccess(true);
+    if (res && res.ok) {
+      setSuccess(true);
+      setTimeout(() => navigate("/"), 500); // Redirect to home after 0.5s
+    }
   };
 
   return (

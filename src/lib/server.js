@@ -367,9 +367,16 @@ app.post(["/register", "/api/register"], async (req, res) => {
     // For demo, assign distributor_id=1 (adjust as needed)
     const distributor_id = 1;
     const q = `INSERT INTO consumer (name, password, role, distributor_id) VALUES ($1, $2, $3, $4) RETURNING consumer_id, name, role`;
-    const { rows } = await pool.query(q, [name, hash, role, distributor_id]);
-    res.json({ ok: true, user: rows[0] });
+    try {
+      const { rows } = await pool.query(q, [name, hash, role, distributor_id]);
+      res.json({ ok: true, user: rows[0] });
+    } catch (pgErr) {
+      // Log and return detailed Postgres error
+      console.error("PG registration error:", pgErr);
+      res.status(500).json({ ok: false, error: pgErr.message, detail: pgErr.detail, code: pgErr.code, constraint: pgErr.constraint });
+    }
   } catch (e) {
+    console.error("Registration error:", e);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
