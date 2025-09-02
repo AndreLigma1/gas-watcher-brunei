@@ -363,7 +363,7 @@ app.get(["/roles", "/api/roles"], async (_req, res) => {
 
 // --- Register endpoint ---
 app.post(["/register", "/api/register"], async (req, res) => {
-  const { name, password, role } = req.body;
+  const { name, password, role, distributor_id } = req.body;
   if (!name || !password || !role) {
     return res.status(400).json({ ok: false, error: "Missing name, password, or role" });
   }
@@ -375,11 +375,11 @@ app.post(["/register", "/api/register"], async (req, res) => {
     }
     // Hash password
     const hash = await bcrypt.hash(password, 10);
-    // For demo, assign distributor_id=1 (adjust as needed)
-    const distributor_id = 1;
-    const q = `INSERT INTO consumer (name, password, role, distributor_id) VALUES ($1, $2, $3, $4) RETURNING consumer_id, name, role`;
+    // Use provided distributor_id or default to 1
+    const distId = distributor_id ? distributor_id : 1;
+    const q = `INSERT INTO consumer (name, password, role, distributor_id) VALUES ($1, $2, $3, $4) RETURNING consumer_id, name, role, distributor_id`;
     try {
-      const { rows } = await pool.query(q, [name, hash, role, distributor_id]);
+      const { rows } = await pool.query(q, [name, hash, role, distId]);
       res.json({ ok: true, user: rows[0] });
     } catch (pgErr) {
       // Log and return detailed Postgres error
