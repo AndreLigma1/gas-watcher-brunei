@@ -1,13 +1,3 @@
-// --- Get available roles from consumer_role enum ---
-app.get(["/roles", "/api/roles"], async (_req, res) => {
-  try {
-    const q = `SELECT unnest(enum_range(NULL::consumer_role)) AS role`;
-    const { rows } = await pool.query(q);
-    res.json({ ok: true, roles: rows.map(r => r.role) });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -352,6 +342,17 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
     res.json({ ok: true, item: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- Get available roles from consumer_role enum ---
+app.get(["/roles", "/api/roles"], async (_req, res) => {
+  try {
+    const q = `SELECT unnest(enum_range(NULL::consumer_role)) AS role`;
+    const { rows } = await pool.query(q);
+    res.json({ ok: true, roles: rows.map(r => r.role) });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

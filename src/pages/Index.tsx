@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/auth-context';
 import { useDevices } from '@/hooks/useDevices';
 import { useSearch } from '@/hooks/useSearch';
 import { DeviceCard } from '@/components/device-card';
@@ -42,12 +43,21 @@ const Index = () => {
       });
   }, []);
 
-  // Build filter object for useDevices hook
-  const filterObj =
-    filterType === 'manufacturer' && filterId ? { manufacturer_id: filterId } :
-    filterType === 'distributor' && filterId ? { distributor_id: filterId } :
-    filterType === 'consumer' && filterId ? { consumer_id: filterId } :
-    undefined;
+
+  // Get user from auth context
+  const { user, logout } = useAuth();
+
+  // If user is 'user' role, always filter by their consumer_id
+  let filterObj: any = undefined;
+  if (user?.role === 'user') {
+    filterObj = { consumer_id: user.consumer_id };
+  } else if (filterType === 'manufacturer' && filterId) {
+    filterObj = { manufacturer_id: filterId };
+  } else if (filterType === 'distributor' && filterId) {
+    filterObj = { distributor_id: filterId };
+  } else if (filterType === 'consumer' && filterId) {
+    filterObj = { consumer_id: filterId };
+  }
 
   const { data: devices, isLoading, error } = useDevices(filterObj);
   const { query, setQuery, results } = useSearch({
@@ -99,14 +109,22 @@ const Index = () => {
       {/* Header */}
       <div className="border-b bg-card shadow-sm">
         <div className="max-w-7xl mx-auto p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-              <Activity className="h-5 w-5" />
+          <div className="flex items-center gap-3 mb-6 justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">IoT Device Monitoring</h1>
+                <p className="text-muted-foreground">Monitor devices and tank levels in real-time</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">IoT Device Monitoring</h1>
-              <p className="text-muted-foreground">Monitor devices and tank levels in real-time</p>
-            </div>
+            <button
+              className="ml-auto px-4 py-2 rounded bg-destructive text-white hover:bg-destructive/80 text-sm"
+              onClick={() => { logout(); navigate('/login'); }}
+            >
+              Logout
+            </button>
           </div>
 
           {/* Filters & Search */}
