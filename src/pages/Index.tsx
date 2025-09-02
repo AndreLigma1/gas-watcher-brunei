@@ -140,61 +140,69 @@ const Index = () => {
               />
             </div>
             <div className="flex gap-2">
-              {/* Manufacturer filter */}
-              <select
-                className="border rounded px-2 py-1"
-                value={filterType === 'manufacturer' ? filterId : ''}
-                onChange={e => {
-                  setFilterType('manufacturer');
-                  setFilterId(e.target.value);
-                }}
-                disabled={filtersLoading}
-              >
-                <option value="">Manufacturer</option>
-                {manufacturers.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-              {/* Distributor filter */}
-              <select
-                className="border rounded px-2 py-1"
-                value={filterType === 'distributor' ? filterId : ''}
-                onChange={e => {
-                  setFilterType('distributor');
-                  setFilterId(e.target.value);
-                }}
-                disabled={filtersLoading}
-              >
-                <option value="">Distributor</option>
-                {distributors.map(d => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-              {/* Consumer filter (only for non-user roles) */}
-              {user?.role !== 'user' && (
-                <select
+              {user?.role === 'user' ? (
+                <input
                   className="border rounded px-2 py-1"
-                  value={filterType === 'consumer' ? filterId : ''}
-                  onChange={e => {
-                    setFilterType('consumer');
-                    setFilterId(e.target.value);
-                  }}
-                  disabled={filtersLoading}
-                >
-                  <option value="">Consumer</option>
-                  {consumers.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              )}
-              {/* Clear filter button */}
-              {(filterType && filterId) && (
-                <button
-                  className="ml-2 px-2 py-1 border rounded text-xs bg-muted hover:bg-muted/70"
-                  onClick={() => { setFilterType(null); setFilterId(''); }}
-                >
-                  Clear Filter
-                </button>
+                  placeholder="Location (coming soon)"
+                  disabled
+                />
+              ) : (
+                <>
+                  {/* Manufacturer filter */}
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={filterType === 'manufacturer' ? filterId : ''}
+                    onChange={e => {
+                      setFilterType('manufacturer');
+                      setFilterId(e.target.value);
+                    }}
+                    disabled={filtersLoading}
+                  >
+                    <option value="">Manufacturer</option>
+                    {manufacturers.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                  {/* Distributor filter */}
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={filterType === 'distributor' ? filterId : ''}
+                    onChange={e => {
+                      setFilterType('distributor');
+                      setFilterId(e.target.value);
+                    }}
+                    disabled={filtersLoading}
+                  >
+                    <option value="">Distributor</option>
+                    {distributors.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                  {/* Consumer filter (only for non-user roles) */}
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={filterType === 'consumer' ? filterId : ''}
+                    onChange={e => {
+                      setFilterType('consumer');
+                      setFilterId(e.target.value);
+                    }}
+                    disabled={filtersLoading}
+                  >
+                    <option value="">Consumer</option>
+                    {consumers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  {/* Clear filter button */}
+                  {(filterType && filterId) && (
+                    <button
+                      className="ml-2 px-2 py-1 border rounded text-xs bg-muted hover:bg-muted/70"
+                      onClick={() => { setFilterType(null); setFilterId(''); }}
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </>
               )}
             </div>
       {filtersError && (
