@@ -28,22 +28,6 @@ const Index = () => {
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setFiltersLoading(true);
-    fetchFilterOptions()
-      .then(({ manufacturers, distributors, consumers }) => {
-        setManufacturers(manufacturers);
-        setDistributors(distributors);
-        setConsumers(consumers);
-        setFiltersLoading(false);
-      })
-      .catch((e) => {
-        setFiltersError('Failed to load filter options');
-        setFiltersLoading(false);
-      });
-  }, []);
-
-
   // Get user from auth context
   const { user, logout } = useAuth();
 
@@ -72,26 +56,7 @@ const Index = () => {
     navigate(`/device/${deviceId}`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="border-b bg-card">
-          <div className="max-w-7xl mx-auto p-6">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <Skeleton className="h-10 w-80" />
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-48" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // ...existing code...
   if (error) {
     return (
       <div className="min-h-screen bg-background p-6">
@@ -163,21 +128,23 @@ const Index = () => {
                       <option key={m.id} value={m.id}>{m.name}</option>
                     ))}
                   </select>
-                  {/* Distributor filter */}
-                  <select
-                    className="border rounded px-2 py-1"
-                    value={filterType === 'distributor' ? filterId : ''}
-                    onChange={e => {
-                      setFilterType('distributor');
-                      setFilterId(e.target.value);
-                    }}
-                    disabled={filtersLoading}
-                  >
-                    <option value="">Distributor</option>
-                    {distributors.map(d => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
+                  {/* Distributor filter (hide for distributor role) */}
+                  {user?.role !== 'distributor' && (
+                    <select
+                      className="border rounded px-2 py-1"
+                      value={filterType === 'distributor' ? filterId : ''}
+                      onChange={e => {
+                        setFilterType('distributor');
+                        setFilterId(e.target.value);
+                      }}
+                      disabled={filtersLoading}
+                    >
+                      <option value="">Distributor</option>
+                      {distributors.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  )}
                   {/* Consumer filter (only for non-user roles) */}
                   <select
                     className="border rounded px-2 py-1"
