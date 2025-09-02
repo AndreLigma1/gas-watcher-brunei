@@ -399,7 +399,8 @@ app.post(["/login", "/api/login"], async (req, res) => {
     return res.status(400).json({ ok: false, error: "Missing name or password" });
   }
   try {
-    const q = `SELECT consumer_id, name, password, role FROM consumer WHERE name = $1 LIMIT 1`;
+    // Fetch distributor_id as well
+    const q = `SELECT consumer_id, name, password, role, distributor_id FROM consumer WHERE name = $1 LIMIT 1`;
     const { rows } = await pool.query(q, [name]);
     if (!rows.length) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
@@ -409,16 +410,20 @@ app.post(["/login", "/api/login"], async (req, res) => {
     if (!valid) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
-    // Create JWT
+    // Include distributor_id in JWT and user object if present
+    const payload = { consumer_id: user.consumer_id, name: user.name, role: user.role };
+    if (user.distributor_id) payload.distributor_id = user.distributor_id;
     const token = jwt.sign(
-      { consumer_id: user.consumer_id, name: user.name, role: user.role },
+      payload,
       process.env.JWT_SECRET || "devsecret",
       { expiresIn: "7d" }
     );
+    const userObj = { consumer_id: user.consumer_id, name: user.name, role: user.role };
+    if (user.distributor_id) userObj.distributor_id = user.distributor_id;
     res.json({
       ok: true,
       token,
-      user: { consumer_id: user.consumer_id, name: user.name, role: user.role }
+      user: userObj
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
