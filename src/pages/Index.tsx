@@ -167,21 +167,23 @@ const Index = () => {
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
-              {/* Consumer filter */}
-              <select
-                className="border rounded px-2 py-1"
-                value={filterType === 'consumer' ? filterId : ''}
-                onChange={e => {
-                  setFilterType('consumer');
-                  setFilterId(e.target.value);
-                }}
-                disabled={filtersLoading}
-              >
-                <option value="">Consumer</option>
-                {consumers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              {/* Consumer filter (only for non-user roles) */}
+              {user?.role !== 'user' && (
+                <select
+                  className="border rounded px-2 py-1"
+                  value={filterType === 'consumer' ? filterId : ''}
+                  onChange={e => {
+                    setFilterType('consumer');
+                    setFilterId(e.target.value);
+                  }}
+                  disabled={filtersLoading}
+                >
+                  <option value="">Consumer</option>
+                  {consumers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              )}
               {/* Clear filter button */}
               {(filterType && filterId) && (
                 <button

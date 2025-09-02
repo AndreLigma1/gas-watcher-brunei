@@ -4,7 +4,7 @@ import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const RegisterPage = () => {
   const [name, setName] = useState("");
@@ -70,6 +70,9 @@ const RegisterPage = () => {
           {error && <div className="text-red-500 text-sm">{error}</div>}
           {success && <div className="text-green-600 text-sm">Registration successful! Redirecting to login...</div>}
         </form>
+        <div className="mt-4 text-center text-sm">
+          Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+        </div>
       </Card>
     </div>
   );
