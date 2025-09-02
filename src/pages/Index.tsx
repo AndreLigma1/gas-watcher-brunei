@@ -48,12 +48,9 @@ const Index = () => {
   const { user, logout } = useAuth();
 
   // If user is 'user' role, always filter by their consumer_id
-  // If user is 'distributor' role, always filter by their distributor_id
   let filterObj: any = undefined;
   if (user?.role === 'user') {
     filterObj = { consumer_id: user.consumer_id };
-  } else if (user?.role === 'distributor') {
-    filterObj = { distributor_id: user.distributor_id };
   } else if (filterType === 'manufacturer' && filterId) {
     filterObj = { manufacturer_id: filterId };
   } else if (filterType === 'distributor' && filterId) {
