@@ -22,6 +22,11 @@ const RegisterPage = () => {
     setError("");
     setSuccess(false);
     try {
+      if (role === "distributor") {
+        // Go to distributor selection page, pass registration info
+        navigate("/choose-distributor", { state: { name, password, role } });
+        return;
+      }
       await axios.post("/api/register", { name, password, role });
       setSuccess(true);
       setTimeout(() => navigate("/login"), 1500);

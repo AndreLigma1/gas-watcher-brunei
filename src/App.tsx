@@ -9,6 +9,7 @@ import DeviceDetail from "./pages/DeviceDetail";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ChooseDistributor from "./pages/ChooseDistributor";
 import { AuthProvider, useAuth } from "@/hooks/auth-context";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,6 +40,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/choose-distributor" element={<ChooseDistributor />} />
             <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
             <Route path="/device/:deviceId" element={<RequireAuth><DeviceDetail /></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
