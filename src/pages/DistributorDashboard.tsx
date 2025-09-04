@@ -1,22 +1,31 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth-context';
 import { useDevices } from '@/hooks/useDevices';
 import { useSearch } from '@/hooks/useSearch';
 import { DeviceCard } from '@/components/device-card';
-import { SearchBar } from '@/components/search-bar';
+import UserCard from '@/components/user-card';
+import { useConsumersByDistributor } from '@/hooks/useConsumersByDistributor';
 import { Card } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
 
 const DistributorDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  // Only show devices for this distributor
-  const filterObj = { distributor_id: user?.distributor_id };
-  const { data: devices, isLoading, error } = useDevices(filterObj);
+  // Show all users for this distributor
+  const { data: consumers, isLoading: usersLoading, error: usersError } = useConsumersByDistributor(user?.distributor_id);
+  const [selectedUser, setSelectedUser] = React.useState<{ consumer_id: string; name: string } | null>(null);
+  // When a user is selected, show their devices
+  const filterObj = selectedUser ? { consumer_id: selectedUser.consumer_id } : undefined;
+  const { data: devices, isLoading: devicesLoading, error: devicesError } = useDevices(filterObj);
   const { query, setQuery, results } = useSearch({
     data: devices || [],
     searchFields: ['id']
   });
+  const handleUserClick = (consumer_id: string) => {
+    const userObj = consumers.find((c: any) => c.consumer_id === consumer_id);
+    setSelectedUser(userObj);
+  };
   const handleDeviceClick = (deviceId: string) => {
     navigate(`/device/${deviceId}`);
   };
@@ -31,7 +40,7 @@ const DistributorDashboard = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Distributor Dashboard</h1>
-                <p className="text-muted-foreground">Devices managed by your distributor</p>
+                <p className="text-muted-foreground">Users managed by your distributor</p>
               </div>
             </div>
             <button
@@ -41,35 +50,50 @@ const DistributorDashboard = () => {
               Logout
             </button>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="flex-1">
-              <SearchBar
-                value={query}
-                onChange={setQuery}
-                placeholder="Search by device ID..."
-              />
-            </div>
-          </div>
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-6">
-        {results.length === 0 ? (
-          <Card className="p-8 text-center">
-            <h3 className="text-lg font-semibold mb-2">No devices found</h3>
-            <p className="text-muted-foreground">
-              {query ? 'Try adjusting your search terms' : 'No devices available'}
-            </p>
-          </Card>
+        {!selectedUser ? (
+          <>
+            <h2 className="text-xl font-semibold mb-4">Users</h2>
+            {usersLoading ? (
+              <p>Loading users...</p>
+            ) : usersError ? (
+              <p className="text-red-500">Failed to load users</p>
+            ) : consumers && consumers.length === 0 ? (
+              <Card className="p-8 text-center">No users found for this distributor.</Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {consumers.map((c: any) => (
+                  <UserCard key={c.consumer_id} user={c} onClick={handleUserClick} />
+                ))}
+              </div>
+            )}
+          </>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {results.map((device) => (
-              <DeviceCard
-                key={device.id}
-                device={device}
-                onClick={() => handleDeviceClick(device.id)}
-              />
-            ))}
-          </div>
+          <>
+            <button className="mb-4 px-3 py-1 rounded bg-muted" onClick={() => setSelectedUser(null)}>
+              ← Back to Users
+            </button>
+            <h2 className="text-xl font-semibold mb-4">Devices for {selectedUser.name}</h2>
+            {devicesLoading ? (
+              <p>Loading devices...</p>
+            ) : devicesError ? (
+              <p className="text-red-500">Failed to load devices</p>
+            ) : results.length === 0 ? (
+              <Card className="p-8 text-center">No devices found for this user.</Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {results.map((device) => (
+                  <DeviceCard
+                    key={device.id}
+                    device={device}
+                    onClick={() => handleDeviceClick(device.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
