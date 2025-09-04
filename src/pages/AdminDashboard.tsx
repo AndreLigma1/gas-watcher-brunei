@@ -10,15 +10,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle } from 'lucide-react';
 import { fetchFilterOptions } from '@/lib/fetchFilterOptions';
-import UserManagement from './UserManagement';
-import DistributorManagement from './DistributorManagement';
-import DeviceManagement from './DeviceManagement';
-
-const MENU = [
-  { key: 'user', label: 'User Management', component: <UserManagement /> },
-  { key: 'distributor', label: 'Distributor Management', component: <DistributorManagement /> },
-  { key: 'device', label: 'Device Management', component: <DeviceManagement /> },
-];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -112,47 +103,134 @@ const AdminDashboard = () => {
     );
   }
 
-  const [selectedMenu, setSelectedMenu] = useState('user');
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card shadow-sm">
-        <div className="max-w-7xl mx-auto p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-              <Activity className="h-5 w-5" />
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center gap-3 mb-6 justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+                <p className="text-muted-foreground">to be implemented: user management-view all users and devices assigned</p> 
+                <p className="text-muted-foreground">distributor management- view all distributors and their assigned users and their deployed devices</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Manage users, distributors, and devices</p>
-            </div>
+            <button
+              className="ml-auto px-4 py-2 rounded bg-destructive text-white hover:bg-destructive/80 text-sm"
+              onClick={() => { logout(); navigate('/login'); }}
+            >
+              Logout
+            </button>
           </div>
-          <button
-            className="ml-auto px-4 py-2 rounded bg-destructive text-white hover:bg-destructive/80 text-sm"
-            onClick={() => { logout(); navigate('/login'); }}
-          >
-            Logout
-          </button>
+
+          {/* Filters & Search */}
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <SearchBar
+                value={query}
+                onChange={setQuery}
+                placeholder="Search by device ID..."
+              />
+            </div>
+            <div className="flex gap-2">
+              {user?.role === 'user' ? (
+                <input
+                  className="border rounded px-2 py-1"
+                  placeholder="Location (not yet implemented)"
+                  disabled
+                />
+              ) : (
+                <>
+                  {/* Manufacturer filter */}
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={filterType === 'manufacturer' ? filterId : ''}
+                    onChange={e => {
+                      setFilterType('manufacturer');
+                      setFilterId(e.target.value);
+                    }}
+                    disabled={filtersLoading}
+                  >
+                    <option value="">Manufacturer</option>
+                    {manufacturers.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                  {/* Distributor filter (hide for distributor role) */}
+                  {user?.role !== 'distributor' && (
+                    <select
+                      className="border rounded px-2 py-1"
+                      value={filterType === 'distributor' ? filterId : ''}
+                      onChange={e => {
+                        setFilterType('distributor');
+                        setFilterId(e.target.value);
+                      }}
+                      disabled={filtersLoading}
+                    >
+                      <option value="">Distributor</option>
+                      {distributors.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                  )}
+                  {/* Consumer filter (only for non-user roles) */}
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={filterType === 'consumer' ? filterId : ''}
+                    onChange={e => {
+                      setFilterType('consumer');
+                      setFilterId(e.target.value);
+                    }}
+                    disabled={filtersLoading}
+                  >
+                    <option value="">Consumer</option>
+                    {consumers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  {/* Clear filter button */}
+                  {(filterType && filterId) && (
+                    <button
+                      className="ml-2 px-2 py-1 border rounded text-xs bg-muted hover:bg-muted/70"
+                      onClick={() => { setFilterType(null); setFilterId(''); }}
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+      {filtersError && (
+        <div className="text-red-500 text-sm mt-2">{filtersError}</div>
+      )}
+          </div>
         </div>
       </div>
 
-      {/* Admin Menu */}
+      {/* Device Grid */}
       <div className="max-w-7xl mx-auto p-6">
-        <div className="flex gap-4 mb-8">
-          {MENU.map((item) => (
-            <button
-              key={item.key}
-              className={`px-4 py-2 rounded font-medium border ${selectedMenu === item.key ? 'bg-primary text-white' : 'bg-card text-primary border-primary'}`}
-              onClick={() => setSelectedMenu(item.key)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div className="bg-card rounded shadow p-4">
-          {MENU.find((item) => item.key === selectedMenu)?.component}
-        </div>
+        {results.length === 0 ? (
+          <Card className="p-8 text-center">
+            <h3 className="text-lg font-semibold mb-2">No devices found</h3>
+            <p className="text-muted-foreground">
+              {query ? 'Try adjusting your search terms' : 'No devices available'}
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {results.map((device) => (
+              <DeviceCard
+                key={device.id}
+                device={device}
+                onClick={() => handleDeviceClick(device.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
