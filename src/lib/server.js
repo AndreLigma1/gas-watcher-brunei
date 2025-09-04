@@ -306,7 +306,7 @@ mountGet(["/consumers", "/api/consumers"], async (req, res) => {
 
   const sql = `
     SELECT
-      c.consumer_id, c.name,
+      c.consumer_id, c.name, c.role,
       c.distributor_id, d.name AS distributor_name,
       d.manufacturer_id, m.name AS manufacturer_name,
       c.created_at, c.updated_at
@@ -329,7 +329,7 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT
-         c.consumer_id, c.name,
+         c.consumer_id, c.name, c.role,
          c.distributor_id, d.name AS distributor_name,
          d.manufacturer_id, m.name AS manufacturer_name,
          c.created_at, c.updated_at

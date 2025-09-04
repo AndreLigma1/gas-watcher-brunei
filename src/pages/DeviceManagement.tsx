@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useDevices } from '@/hooks/useDevices';
 import { useSearch } from '@/hooks/useSearch';
 import { DeviceCard } from '@/components/device-card';
+import { useNavigate } from 'react-router-dom';
 import { SearchBar } from '@/components/search-bar';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle } from 'lucide-react';
 
 const DeviceManagement = () => {
+  const navigate = useNavigate();
   const [filterType, setFilterType] = useState<'manufacturer' | 'distributor' | 'consumer' | null>(null);
   const [filterId, setFilterId] = useState<string>('');
 
@@ -31,6 +33,11 @@ const DeviceManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card shadow-sm">
+        <div className="max-w-7xl mx-auto p-2 flex gap-4">
+          <a href="/user-management" className="text-primary underline">Users</a>
+          <a href="/distributor-management" className="text-primary underline">Distributors</a>
+          <a href="/device-management" className="text-primary underline">Devices</a>
+        </div>
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex items-center gap-3 mb-6 justify-between">
             <div className="flex items-center gap-3">
@@ -72,6 +79,7 @@ const DeviceManagement = () => {
               <DeviceCard
                 key={device.id}
                 device={device}
+                onClick={() => navigate(`/device-detail-admin/${device.id}`)}
               />
             ))}
           </div>

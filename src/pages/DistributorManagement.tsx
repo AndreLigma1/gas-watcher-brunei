@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
 
 const DistributorManagement = () => {
+  const navigate = useNavigate();
   const [distributors, setDistributors] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +32,11 @@ const DistributorManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card shadow-sm">
+        <div className="max-w-7xl mx-auto p-2 flex gap-4">
+          <a href="/user-management" className="text-primary underline">Users</a>
+          <a href="/distributor-management" className="text-primary underline">Distributors</a>
+          <a href="/device-management" className="text-primary underline">Devices</a>
+        </div>
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex items-center gap-3 mb-6 justify-between">
             <div className="flex items-center gap-3">
@@ -54,7 +61,11 @@ const DistributorManagement = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {distributors.map(dist => (
-              <Card key={dist.distributor_id} className="p-4">
+              <Card
+                key={dist.distributor_id}
+                className="p-4 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition"
+                onClick={() => navigate(`/distributor-detail/${dist.distributor_id}`)}
+              >
                 <div className="font-semibold">{dist.name}</div>
                 <div className="text-xs text-muted-foreground mb-2">ID: {dist.distributor_id}</div>
                 <div className="mt-2">
