@@ -115,8 +115,6 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                <p className="text-muted-foreground">to be implemented: user management-view all users and devices assigned</p> 
-                <p className="text-muted-foreground">distributor management- view all distributors and their assigned users and their deployed devices</p>
               </div>
             </div>
             <button
@@ -127,7 +125,29 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          {/* Filters & Search */}
+          {/* Admin Management Menu */}
+          <div className="flex gap-4 mb-8">
+            <button
+              className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 text-sm"
+              onClick={() => navigate('/user-management')}
+            >
+              User Management
+            </button>
+            <button
+              className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 text-sm"
+              onClick={() => navigate('/distributor-management')}
+            >
+              Distributor Management
+            </button>
+            <button
+              className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 text-sm"
+              onClick={() => navigate('/device-management')}
+            >
+              Device Management
+            </button>
+          </div>
+
+          {/* Filters & Search (optional, can be removed if not needed for admin) */}
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
               <SearchBar
@@ -211,27 +231,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Device Grid */}
-      <div className="max-w-7xl mx-auto p-6">
-        {results.length === 0 ? (
-          <Card className="p-8 text-center">
-            <h3 className="text-lg font-semibold mb-2">No devices found</h3>
-            <p className="text-muted-foreground">
-              {query ? 'Try adjusting your search terms' : 'No devices available'}
-            </p>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {results.map((device) => (
-              <DeviceCard
-                key={device.id}
-                device={device}
-                onClick={() => handleDeviceClick(device.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Device Grid (optional, can be moved or removed) */}
+      {/* <div className="max-w-7xl mx-auto p-6"> ... </div> */}
     </div>
   );
 }
