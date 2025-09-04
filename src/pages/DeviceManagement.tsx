@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useDevices } from '@/hooks/useDevices';
 import { useSearch } from '@/hooks/useSearch';
@@ -8,16 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle } from 'lucide-react';
 
-// Device Management: all devices view with filter/search
 const DeviceManagement = () => {
-  // Only one filter can be active at a time
   const [filterType, setFilterType] = useState<'manufacturer' | 'distributor' | 'consumer' | null>(null);
   const [filterId, setFilterId] = useState<string>('');
 
-  // Filter options from API (optional: can be added if needed)
-  // ...existing code for fetching filter options if required...
-
-  // Device fetching logic
   let filterObj: any = undefined;
   if (filterType === 'manufacturer' && filterId) {
     filterObj = { manufacturer_id: filterId };
@@ -32,41 +27,6 @@ const DeviceManagement = () => {
     data: devices || [],
     searchFields: ['id']
   });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="border-b bg-card">
-          <div className="max-w-7xl mx-auto p-6">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <Skeleton className="h-10 w-80" />
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-48" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-4xl mx-auto">
-          <Alert className="border-destructive/50 bg-destructive/10">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load devices. Please check your connection and try again.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,12 +51,15 @@ const DeviceManagement = () => {
                 placeholder="Search by device ID..."
               />
             </div>
-            {/* Add filter dropdowns here if needed */}
           </div>
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-6">
-        {results.length === 0 ? (
+        {isLoading ? (
+          <Card className="p-8 text-center">Loading devices...</Card>
+        ) : error ? (
+          <Card className="p-8 text-center text-red-500">{error?.toString()}</Card>
+        ) : results.length === 0 ? (
           <Card className="p-8 text-center">
             <h3 className="text-lg font-semibold mb-2">No devices found</h3>
             <p className="text-muted-foreground">
@@ -109,7 +72,6 @@ const DeviceManagement = () => {
               <DeviceCard
                 key={device.id}
                 device={device}
-                // onClick={() => handleDeviceClick(device.id)}
               />
             ))}
           </div>
