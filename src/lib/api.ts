@@ -38,6 +38,7 @@ export const apiClient = {
       tank_level_cm: Number(d.tank_level), // tank level in cm
       tank_level: Number(d.measurement), // use measurement as percentage for display
       timestamp: String(d.timestamp),
+      consumer_id: d.consumer_id !== undefined ? String(d.consumer_id) : undefined,
     })) as Device[];
   },
 
@@ -56,6 +57,7 @@ export const apiClient = {
             tank_level_cm: Number(d.tank_level), // tank level in cm
             tank_level: Number(d.measurement), // use measurement as percentage for display
             timestamp: String(d.timestamp),
+            consumer_id: d.consumer_id !== undefined ? String(d.consumer_id) : undefined,
           } as Device;
         }
       }

@@ -62,8 +62,8 @@ mountGet(["/devices/latest", "/api/devices/latest"], async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 200, 1000);
   try {
     const q = `
-      SELECT DISTINCT ON (id)
-             id, measurement, tank_level, "timestamp"
+  SELECT DISTINCT ON (id)
+     id, measurement, tank_level, consumer_id, "timestamp"
       FROM devices
       ORDER BY id, "timestamp" DESC
       LIMIT $1
@@ -111,7 +111,7 @@ mountGet(["/devices", "/api/devices"], async (req, res) => {
 
   try {
     const q = `
-      SELECT devices.id, devices.measurement, devices.tank_level, devices."timestamp"
+  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp"
       FROM devices
       ${joins}
       ${where}

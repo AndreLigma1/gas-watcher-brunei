@@ -4,4 +4,5 @@ export interface Device {
   tank_level_cm: number; // tank level in cm
   tank_level: number; // same as measurement for display
   timestamp: string; // ISO timestamp
+  consumer_id?: string;
 }
