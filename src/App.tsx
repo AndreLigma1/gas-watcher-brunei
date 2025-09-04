@@ -11,6 +11,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ChooseDistributor from "./pages/ChooseDistributor";
 import AdminDashboard from "./pages/AdminDashboard";
+import UserManagement from "./pages/UserManagement";
+import DistributorManagement from "./pages/DistributorManagement";
+import DeviceManagement from "./pages/DeviceManagement";
 import DistributorDashboard from "./pages/DistributorDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import NotFoundRole from "./pages/NotFoundRole";
@@ -57,6 +60,10 @@ const App = () => (
             <Route path="/choose-distributor" element={<ChooseDistributor />} />
             <Route path="/" element={<RequireAuth><RoleRouter /></RequireAuth>} />
             <Route path="/device/:deviceId" element={<RequireAuth><DeviceDetail /></RequireAuth>} />
+            {/* Admin Management Routes */}
+            <Route path="/user-management" element={<RequireAuth><UserManagement /></RequireAuth>} />
+            <Route path="/distributor-management" element={<RequireAuth><DistributorManagement /></RequireAuth>} />
+            <Route path="/device-management" element={<RequireAuth><DeviceManagement /></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
