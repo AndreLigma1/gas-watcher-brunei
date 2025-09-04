@@ -37,7 +37,7 @@ const Index = () => {
   if (user?.role === 'user') {
     filterObj = { consumer_id: user.consumer_id };
   } else if (user?.role === 'distributor') {
-    filterObj = { distributor_id: user.distributor_id };
+    filterObj = { distributor_name: user.distributor_name };
   } else if (filterType === 'manufacturer' && filterId) {
     filterObj = { manufacturer_id: filterId };
   } else if (filterType === 'distributor' && filterId) {

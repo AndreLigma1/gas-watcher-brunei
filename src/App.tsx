@@ -10,6 +10,10 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ChooseDistributor from "./pages/ChooseDistributor";
+import AdminDashboard from "./pages/AdminDashboard";
+import DistributorDashboard from "./pages/DistributorDashboard";
+import UserDashboard from "./pages/UserDashboard";
+import NotFoundRole from "./pages/NotFoundRole";
 import { AuthProvider, useAuth } from "@/hooks/auth-context";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -30,6 +34,16 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
+
+function RoleRouter() {
+  const { user } = useAuth();
+  if (!user) return null;
+  if (user.role === 'admin') return <AdminDashboard />;
+  if (user.role === 'distributor') return <DistributorDashboard />;
+  if (user.role === 'user') return <UserDashboard />;
+  return <NotFoundRole />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -41,7 +55,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/choose-distributor" element={<ChooseDistributor />} />
-            <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
+            <Route path="/" element={<RequireAuth><RoleRouter /></RequireAuth>} />
             <Route path="/device/:deviceId" element={<RequireAuth><DeviceDetail /></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
