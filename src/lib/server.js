@@ -1,4 +1,4 @@
-// --- Admin Profile Update Endpoint (no security) ---
+// --- Admin Profile Update Endpoint (no auth, for testing/demo) ---
 app.post(["/admin-profile/update", "/api/admin-profile/update"], async (req, res) => {
   try {
     const { real_name, status } = req.body;
@@ -16,7 +16,7 @@ app.post(["/admin-profile/update", "/api/admin-profile/update"], async (req, res
       updates.push(`status = $${idx++}`);
       values.push(status);
     }
-    // Update the first admin user found
+    // For demo: update the first admin user
     const q = `UPDATE consumer SET ${updates.join(', ')} WHERE role = 'admin' RETURNING consumer_id, name, real_name, role, created_at, status`;
     const { rows } = await pool.query(q, values);
     if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
@@ -459,11 +459,19 @@ app.post(["/login", "/api/login"], async (req, res) => {
     if (!valid) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
-    // Only return user info, no JWT
+    // Include distributor_id in JWT and user object if present
+    const payload = { consumer_id: user.consumer_id, name: user.name, role: user.role };
+    if (user.distributor_id) payload.distributor_id = user.distributor_id;
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || "devsecret",
+      { expiresIn: "7d" }
+    );
     const userObj = { consumer_id: user.consumer_id, name: user.name, role: user.role };
     if (user.distributor_id) userObj.distributor_id = user.distributor_id;
     res.json({
       ok: true,
+      token,
       user: userObj
     });
   } catch (e) {

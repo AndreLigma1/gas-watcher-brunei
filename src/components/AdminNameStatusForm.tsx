@@ -19,6 +19,8 @@ const AdminNameStatusForm = ({ profile, onProfileUpdate }: { profile: any, onPro
       const res = await axios.post('/api/admin-profile/update', {
         real_name: realName,
         status,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       onProfileUpdate(res.data.profile);
       setSuccess(true);

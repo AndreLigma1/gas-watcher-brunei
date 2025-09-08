@@ -12,7 +12,9 @@ const AdminProfile = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/admin-profile')
+    axios.get('/api/admin-profile', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
       .then(res => {
         setProfile(res.data.profile);
         setLoading(false);
