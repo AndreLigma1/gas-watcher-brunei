@@ -27,21 +27,20 @@ const UserManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card shadow-sm">
-        <div className="max-w-7xl mx-auto p-2 flex gap-4">
-          <a href="/user-management" className="text-primary underline">Users</a>
-          <a href="/distributor-management" className="text-primary underline">Distributors</a>
-          <a href="/device-management" className="text-primary underline">Devices</a>
-        </div>
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="flex items-center gap-3 mb-6 justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">User Management</h1>
-                <p className="text-muted-foreground">List of all users</p>
-              </div>
+        <div className="max-w-7xl mx-auto flex items-center p-4">
+          <button
+            className="px-3 py-1 rounded bg-muted text-primary hover:bg-primary/10 text-sm"
+            onClick={() => navigate('/admin-dashboard')}
+          >
+            ← Back to Admin Dashboard
+          </button>
+          <div className="flex items-center gap-3 ml-6">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
+              <Activity className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">User Management</h1>
+              <p className="text-muted-foreground">List of all users</p>
             </div>
           </div>
         </div>
