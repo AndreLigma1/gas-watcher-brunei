@@ -30,7 +30,7 @@ const UserManagement = () => {
         <div className="max-w-7xl mx-auto flex items-center p-4">
           <button
             className="px-3 py-1 rounded bg-muted text-primary hover:bg-primary/10 text-sm"
-            onClick={() => navigate('/admin-dashboard')}
+            onClick={() => navigate('/')}
           >
             ← Back to Admin Dashboard
           </button>
