@@ -1,19 +1,20 @@
 
-
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // On mount, check for user info
+  // On mount, check for token
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
+    const token = localStorage.getItem("token");
+    if (token) {
       try {
-        setUser(JSON.parse(userData));
+        const decoded: any = jwtDecode(token);
+        setUser({ ...decoded });
       } catch {
         setUser(null);
       }
@@ -25,9 +26,10 @@ export function useAuth() {
     setError(null);
     try {
       const res = await axios.post("/api/login", { name, password });
-      // Assume backend returns user info directly (not JWT)
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      setUser(res.data.user);
+      localStorage.setItem("token", res.data.token);
+      // Set user from decoded JWT for immediate redirect
+      const decoded: any = jwtDecode(res.data.token);
+      setUser({ ...decoded });
       setLoading(false);
       return res.data;
     } catch (e: any) {
@@ -39,7 +41,7 @@ export function useAuth() {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   return { user, error, loading, login, logout };
