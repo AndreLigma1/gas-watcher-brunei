@@ -459,19 +459,11 @@ app.post(["/login", "/api/login"], async (req, res) => {
     if (!valid) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
-    // Include distributor_id in JWT and user object if present
-    const payload = { consumer_id: user.consumer_id, name: user.name, role: user.role };
-    if (user.distributor_id) payload.distributor_id = user.distributor_id;
-    const token = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || "devsecret",
-      { expiresIn: "7d" }
-    );
+    // Only return user info, no JWT
     const userObj = { consumer_id: user.consumer_id, name: user.name, role: user.role };
     if (user.distributor_id) userObj.distributor_id = user.distributor_id;
     res.json({
       ok: true,
-      token,
       user: userObj
     });
   } catch (e) {
