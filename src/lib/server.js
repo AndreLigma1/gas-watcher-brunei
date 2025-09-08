@@ -1,3 +1,30 @@
+// --- Admin Profile Update Endpoint (no security) ---
+app.post(["/admin-profile/update", "/api/admin-profile/update"], async (req, res) => {
+  try {
+    const { real_name, status } = req.body;
+    if (!real_name && !status) {
+      return res.status(400).json({ ok: false, error: "No fields to update" });
+    }
+    const updates = [];
+    const values = [];
+    let idx = 1;
+    if (real_name !== undefined) {
+      updates.push(`real_name = $${idx++}`);
+      values.push(real_name);
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${idx++}`);
+      values.push(status);
+    }
+    // Update the first admin user found
+    const q = `UPDATE consumer SET ${updates.join(', ')} WHERE role = 'admin' RETURNING consumer_id, name, real_name, role, created_at, status`;
+    const { rows } = await pool.query(q, values);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, profile: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -358,7 +385,29 @@ app.get(["/roles", "/api/roles"], async (_req, res) => {
   }
 });
 
-/* ------------------------------ Start ---------------------------------- */
+// --- Get admin profile ---
+app.get(["/admin-profile", "/api/admin-profile"], async (req, res) => {
+  try {
+    const q = `
+      SELECT consumer_id, name, real_name, role, created_at, status
+      FROM consumer
+      WHERE role = 'admin'
+      LIMIT 1
+    `;
+
+    const { rows } = await pool.query(q);
+
+    if (!rows.length) {
+      return res.status(404).json({ ok: false, error: "not_found" });
+    }
+
+    res.json({ ok: true, profile: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/* ------------------------- Registration & login ---------------------------- */
 
 
 // --- Register endpoint ---

@@ -1,238 +1,56 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth-context';
-import { useDevices } from '@/hooks/useDevices';
-import { useSearch } from '@/hooks/useSearch';
-import { DeviceCard } from '@/components/device-card';
-import { SearchBar } from '@/components/search-bar';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Activity, AlertTriangle } from 'lucide-react';
-import { fetchFilterOptions } from '@/lib/fetchFilterOptions';
+import { Activity, Menu as MenuIcon, User as UserIcon, Users, Package } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-
-  // Only one filter can be active at a time
-  const [filterType, setFilterType] = useState<'manufacturer' | 'distributor' | 'consumer' | null>(null);
-  const [filterId, setFilterId] = useState<string>('');
-
-  // Filter options from API
-  const [manufacturers, setManufacturers] = useState<{ id: string; name: string }[]>([]);
-  const [distributors, setDistributors] = useState<{ id: string; name: string }[]>([]);
-  const [consumers, setConsumers] = useState<{ id: string; name: string }[]>([]);
-  const [filtersLoading, setFiltersLoading] = useState(true);
-  const [filtersError, setFiltersError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setFiltersLoading(true);
-    fetchFilterOptions()
-      .then(({ manufacturers, distributors, consumers }) => {
-        setManufacturers(manufacturers);
-        setDistributors(distributors);
-        setConsumers(consumers);
-        setFiltersLoading(false);
-      })
-      .catch((e) => {
-        setFiltersError('Failed to load filter options');
-        setFiltersLoading(false);
-      });
-  }, []);
-
-  // Get user from auth context
   const { user, logout } = useAuth();
 
-  // If user is 'user' role, always filter by their consumer_id
-  // If user is 'distributor' role, always filter by their distributor_id
-  let filterObj: any = undefined;
-  if (user?.role === 'user') {
-    filterObj = { consumer_id: user.consumer_id };
-  } else if (user?.role === 'distributor') {
-    filterObj = { distributor_id: user.distributor_id };
-  } else if (filterType === 'manufacturer' && filterId) {
-    filterObj = { manufacturer_id: filterId };
-  } else if (filterType === 'distributor' && filterId) {
-    filterObj = { distributor_id: filterId };
-  } else if (filterType === 'consumer' && filterId) {
-    filterObj = { consumer_id: filterId };
-  }
-
-  const { data: devices, isLoading, error } = useDevices(filterObj);
-  const { query, setQuery, results } = useSearch({
-    data: devices || [],
-    searchFields: ['id']
-  });
-
-  const handleDeviceClick = (deviceId: string) => {
-    navigate(`/device/${deviceId}`);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="border-b bg-card">
-          <div className="max-w-7xl mx-auto p-6">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <Skeleton className="h-10 w-80" />
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-48" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-4xl mx-auto">
-          <Alert className="border-destructive/50 bg-destructive/10">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load devices. Please check your connection and try again.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
+  // Loading and error UI removed (no data fetching in AdminDashboard)
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header with Hamburger Menu */}
       <div className="border-b bg-card shadow-sm">
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="flex items-center gap-3 mb-6 justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              </div>
+        <div className="max-w-7xl mx-auto flex items-center justify-between p-6">
+          <div className="flex items-center gap-3">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="mr-2">
+                  <MenuIcon />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-4 border-b font-bold text-lg flex items-center gap-2">
+                    <Activity className="h-5 w-5" /> Admin Menu
+                  </div>
+                  <nav className="flex-1 p-4 flex flex-col gap-2">
+                    <Button variant="ghost" className="justify-start" onClick={() => navigate('/user-management')}><Users className="mr-2" />Users</Button>
+                    <Button variant="ghost" className="justify-start" onClick={() => navigate('/distributor-management')}><Package className="mr-2" />Distributors</Button>
+                    <Button variant="ghost" className="justify-start" onClick={() => navigate('/device-management')}><Activity className="mr-2" />Devices</Button>
+                    <Button variant="ghost" className="justify-start" onClick={() => navigate('/admin-profile')}><UserIcon className="mr-2" />Profile</Button>
+                  </nav>
+                  <div className="p-4 border-t">
+                    <Button variant="destructive" className="w-full" onClick={() => { logout(); navigate('/login'); }}>Logout</Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
+              <Activity className="h-5 w-5" />
             </div>
-            <button
-              className="ml-auto px-4 py-2 rounded bg-destructive text-white hover:bg-destructive/80 text-sm"
-              onClick={() => { logout(); navigate('/login'); }}
-            >
-              Logout
-            </button>
-          </div>
-
-          {/* Admin Management Menu */}
-          <div className="flex gap-4 mb-8">
-            <button
-              className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 text-sm"
-              onClick={() => navigate('/user-management')}
-            >
-              User Management
-            </button>
-            <button
-              className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 text-sm"
-              onClick={() => navigate('/distributor-management')}
-            >
-              Distributor Management
-            </button>
-            <button
-              className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/80 text-sm"
-              onClick={() => navigate('/device-management')}
-            >
-              Device Management
-            </button>
-          </div>
-
-          {/* Filters & Search (optional, can be removed if not needed for admin) */}
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="flex-1">
-              <SearchBar
-                value={query}
-                onChange={setQuery}
-                placeholder="Search by device ID..."
-              />
-            </div>
-            <div className="flex gap-2">
-              {user?.role === 'user' ? (
-                <input
-                  className="border rounded px-2 py-1"
-                  placeholder="Location (not yet implemented)"
-                  disabled
-                />
-              ) : (
-                <>
-                  {/* Manufacturer filter */}
-                  <select
-                    className="border rounded px-2 py-1"
-                    value={filterType === 'manufacturer' ? filterId : ''}
-                    onChange={e => {
-                      setFilterType('manufacturer');
-                      setFilterId(e.target.value);
-                    }}
-                    disabled={filtersLoading}
-                  >
-                    <option value="">Manufacturer</option>
-                    {manufacturers.map(m => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
-                  {/* Distributor filter (hide for distributor role) */}
-                  {user?.role !== 'distributor' && (
-                    <select
-                      className="border rounded px-2 py-1"
-                      value={filterType === 'distributor' ? filterId : ''}
-                      onChange={e => {
-                        setFilterType('distributor');
-                        setFilterId(e.target.value);
-                      }}
-                      disabled={filtersLoading}
-                    >
-                      <option value="">Distributor</option>
-                      {distributors.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </select>
-                  )}
-                  {/* Consumer filter (only for non-user roles) */}
-                  <select
-                    className="border rounded px-2 py-1"
-                    value={filterType === 'consumer' ? filterId : ''}
-                    onChange={e => {
-                      setFilterType('consumer');
-                      setFilterId(e.target.value);
-                    }}
-                    disabled={filtersLoading}
-                  >
-                    <option value="">Consumer</option>
-                    {consumers.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                  {/* Clear filter button */}
-                  {(filterType && filterId) && (
-                    <button
-                      className="ml-2 px-2 py-1 border rounded text-xs bg-muted hover:bg-muted/70"
-                      onClick={() => { setFilterType(null); setFilterId(''); }}
-                    >
-                      Clear Filter
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-      {filtersError && (
-        <div className="text-red-500 text-sm mt-2">{filtersError}</div>
-      )}
+            <span className="text-2xl font-bold">Admin Dashboard</span>
           </div>
         </div>
       </div>
-
-      {/* Device Grid (optional, can be moved or removed) */}
-      {/* <div className="max-w-7xl mx-auto p-6"> ... </div> */}
+      {/* Main content area (empty for now) */}
+      <div className="max-w-7xl mx-auto p-6">
+        <Card className="p-8 text-center text-muted-foreground">Welcome, admin! Use the menu to manage users, distributors, devices, or view your profile.</Card>
+      </div>
     </div>
   );
 }
