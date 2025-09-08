@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
 import DistributorManagement from "./pages/DistributorManagement";
 import DeviceManagement from "./pages/DeviceManagement";
+import AdminProfile from "./pages/AdminProfile";
 import UserDetail from "./pages/UserDetail";
 import DistributorDetail from "./pages/DistributorDetail";
 import DeviceDetailAdmin from "./pages/DeviceDetailAdmin";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/user-management" element={<RequireAuth><UserManagement /></RequireAuth>} />
             <Route path="/distributor-management" element={<RequireAuth><DistributorManagement /></RequireAuth>} />
             <Route path="/device-management" element={<RequireAuth><DeviceManagement /></RequireAuth>} />
+            <Route path="/admin-profile" element={<RequireAuth><AdminProfile /></RequireAuth>} />
             <Route path="/user-detail/:id" element={<RequireAuth><UserDetail /></RequireAuth>} />
             <Route path="/distributor-detail/:id" element={<RequireAuth><DistributorDetail /></RequireAuth>} />
             <Route path="/device-detail-admin/:id" element={<RequireAuth><DeviceDetailAdmin /></RequireAuth>} />
