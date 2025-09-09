@@ -412,7 +412,7 @@ app.get(["/admin-profile", "/api/admin-profile"], async (req, res) => {
 
 // --- Register endpoint ---
 app.post(["/register", "/api/register"], async (req, res) => {
-  const { name, password, role, distributor_id } = req.body;
+  const { name, password, role, distributor_id, real_name, status } = req.body;
   if (!name || !password || !role) {
     return res.status(400).json({ ok: false, error: "Missing name, password, or role" });
   }
@@ -426,9 +426,24 @@ app.post(["/register", "/api/register"], async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
     // Use provided distributor_id or default to 1
     const distId = distributor_id ? distributor_id : 1;
-    const q = `INSERT INTO consumer (name, password, role, distributor_id) VALUES ($1, $2, $3, $4) RETURNING consumer_id, name, role, distributor_id`;
+    // Build dynamic insert for optional fields
+    const fields = ["name", "password", "role", "distributor_id"];
+    const values = [name, hash, role, distId];
+    const placeholders = ["$1", "$2", "$3", "$4"];
+    let idx = 5;
+    if (real_name !== undefined) {
+      fields.push("real_name");
+      values.push(real_name);
+      placeholders.push(`$${idx++}`);
+    }
+    if (status !== undefined) {
+      fields.push("status");
+      values.push(status);
+      placeholders.push(`$${idx++}`);
+    }
+    const q = `INSERT INTO consumer (${fields.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING consumer_id, name, role, distributor_id, real_name, status`;
     try {
-      const { rows } = await pool.query(q, [name, hash, role, distId]);
+      const { rows } = await pool.query(q, values);
       res.json({ ok: true, user: rows[0] });
     } catch (pgErr) {
       // Log and return detailed Postgres error
