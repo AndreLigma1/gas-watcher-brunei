@@ -1,15 +1,34 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '@/hooks/auth-context';
 import { Card } from '@/components/ui/card';
 import { Activity, Menu as MenuIcon, User as UserIcon, Users, Package } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import AdminNameStatusForm from '@/components/AdminNameStatusForm';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Loading and error UI removed (no data fetching in AdminDashboard)
+  useEffect(() => {
+    setLoading(true);
+    axios.get('/api/admin-profile', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => {
+        setProfile(res.data.profile);
+        setLoading(false);
+      })
+      .catch(e => {
+        setError('Failed to load profile');
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,9 +65,26 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-      {/* Main content area (empty for now) */}
+      {/* Main content area: Admin Profile */}
       <div className="max-w-7xl mx-auto p-6">
-        <Card className="p-8 text-center text-muted-foreground">Welcome, admin! Use the menu to manage users, distributors, devices, or view your profile.</Card>
+        {loading ? (
+          <Card className="p-8 text-center">Loading profile...</Card>
+        ) : error ? (
+          <Card className="p-8 text-center text-red-500">{error}</Card>
+        ) : profile ? (
+          <>
+            <Card className="max-w-md w-full p-8 mb-6 mx-auto">
+              <h2 className="text-2xl font-bold mb-4">Admin Profile</h2>
+              <div className="mb-2"><b>Username:</b> {profile.name}</div>
+              <div className="mb-2"><b>Real Name:</b> {profile.real_name || '-'}</div>
+              <div className="mb-2"><b>Date Created:</b> {profile.created_at ? new Date(profile.created_at).toLocaleString() : '-'}</div>
+              <div className="mb-2"><b>Account Status:</b> {profile.status || '-'}</div>
+            </Card>
+            <AdminNameStatusForm profile={profile} onProfileUpdate={setProfile} />
+          </>
+        ) : (
+          <Card className="p-8 text-center">Profile not found</Card>
+        )}
       </div>
     </div>
   );
