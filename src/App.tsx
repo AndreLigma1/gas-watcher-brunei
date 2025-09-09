@@ -1,3 +1,4 @@
+import ProfileAdmin from "./pages/ProfileAdmin";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/user-detail/:id" element={<RequireAuth><UserDetail /></RequireAuth>} />
             <Route path="/distributor-detail/:id" element={<RequireAuth><DistributorDetail /></RequireAuth>} />
             <Route path="/device-detail-admin/:id" element={<RequireAuth><DeviceDetailAdmin /></RequireAuth>} />
+            <Route path="/profile-admin" element={<RequireAuth><ProfileAdmin /></RequireAuth>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

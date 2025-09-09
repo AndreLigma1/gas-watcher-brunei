@@ -32,7 +32,7 @@ const AdminDashboard = () => {
                     <Button variant="ghost" className="justify-start" onClick={() => navigate('/user-management')}><Users className="mr-2" />Users</Button>
                     <Button variant="ghost" className="justify-start" onClick={() => navigate('/distributor-management')}><Package className="mr-2" />Distributors</Button>
                     <Button variant="ghost" className="justify-start" onClick={() => navigate('/device-management')}><Activity className="mr-2" />Devices</Button>
-                    <Button variant="ghost" className="justify-start" onClick={() => navigate('/admin-profile')}><UserIcon className="mr-2" />Profile</Button>
+                    <Button variant="ghost" className="justify-start" onClick={() => navigate('/profile-admin')}><UserIcon className="mr-2" />Profile</Button>
                   </nav>
                   <div className="p-4 border-t">
                     <Button variant="destructive" className="w-full" onClick={() => { logout(); navigate('/login'); }}>Logout</Button>

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 interface AuthContextType {
   user: any;
@@ -17,10 +18,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
+    const token = localStorage.getItem("token");
+    if (token) {
       try {
-        setUser(JSON.parse(userData));
+        const decoded: any = jwtDecode(token);
+        setUser({ ...decoded });
       } catch {
         setUser(null);
       }
@@ -32,9 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const res = await axios.post("/api/login", { name, password });
-      // Assume backend returns user info directly (not JWT)
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      setUser(res.data.user);
+      localStorage.setItem("token", res.data.token);
+      const decoded: any = jwtDecode(res.data.token);
+      setUser({ ...decoded });
       setLoading(false);
       return res.data;
     } catch (e: any) {
@@ -46,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   return (

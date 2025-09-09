@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/auth-context';
 import axios from 'axios';
 import AdminNameStatusForm from '@/components/AdminNameStatusForm';
 
-const AdminProfile = () => {
+const ProfileAdmin = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,4 +43,4 @@ const AdminProfile = () => {
   );
 };
 
-export default AdminProfile;
+export default ProfileAdmin;
