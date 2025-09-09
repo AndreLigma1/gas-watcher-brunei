@@ -1,30 +1,3 @@
-// --- Admin Profile Update Endpoint (no auth, for testing/demo) ---
-app.post(["/admin-profile/update", "/api/admin-profile/update"], async (req, res) => {
-  try {
-    const { real_name, status } = req.body;
-    if (!real_name && !status) {
-      return res.status(400).json({ ok: false, error: "No fields to update" });
-    }
-    const updates = [];
-    const values = [];
-    let idx = 1;
-    if (real_name !== undefined) {
-      updates.push(`real_name = $${idx++}`);
-      values.push(real_name);
-    }
-    if (status !== undefined) {
-      updates.push(`status = $${idx++}`);
-      values.push(status);
-    }
-    // For demo: update the first admin user
-    const q = `UPDATE consumer SET ${updates.join(', ')} WHERE role = 'admin' RETURNING consumer_id, name, real_name, role, created_at, status`;
-    const { rows } = await pool.query(q, values);
-    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
-    res.json({ ok: true, profile: rows[0] });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -90,7 +63,7 @@ mountGet(["/devices/latest", "/api/devices/latest"], async (req, res) => {
   try {
     const q = `
   SELECT DISTINCT ON (id)
-     id, measurement, tank_level, consumer_id, "timestamp"
+     id, measurement, tank_level, consumer_id, "timestamp", location, tank_type
       FROM devices
       ORDER BY id, "timestamp" DESC
       LIMIT $1
@@ -138,7 +111,7 @@ mountGet(["/devices", "/api/devices"], async (req, res) => {
 
   try {
     const q = `
-  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp"
+  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp", devices.location, devices.tank_type
       FROM devices
       ${joins}
       ${where}
@@ -171,7 +144,7 @@ mountGet(["/devices/:id", "/api/devices/:id"], async (req, res) => {
 
   try {
     const q = `
-      SELECT id, measurement, tank_level, "timestamp"
+      SELECT id, measurement, tank_level, "timestamp", location, tank_type
       FROM devices
       WHERE id = $1 AND "timestamp" >= $2
       ORDER BY "timestamp" ASC
@@ -374,6 +347,35 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
   }
 });
 
+// --- Update device location and tank_type (user editable) ---
+app.patch(["/devices/:id", "/api/devices/:id"], async (req, res) => {
+  const { id } = req.params;
+  const { location, tank_type } = req.body;
+  if (location === undefined && tank_type === undefined) {
+    return res.status(400).json({ ok: false, error: "No fields to update" });
+  }
+  const updates = [];
+  const values = [];
+  let idx = 1;
+  if (location !== undefined) {
+    updates.push(`location = $${idx++}`);
+    values.push(location);
+  }
+  if (tank_type !== undefined) {
+    updates.push(`tank_type = $${idx++}`);
+    values.push(tank_type);
+  }
+  values.push(id);
+  const q = `UPDATE devices SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`;
+  try {
+    const { rows } = await pool.query(q, values);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, device: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // --- Get available roles from consumer_role enum ---
 app.get(["/roles", "/api/roles"], async (_req, res) => {
   try {
@@ -401,6 +403,34 @@ app.get(["/admin-profile", "/api/admin-profile"], async (req, res) => {
       return res.status(404).json({ ok: false, error: "not_found" });
     }
 
+    res.json({ ok: true, profile: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- Admin Profile Update Endpoint (no auth, for testing/demo) ---
+app.post(["/admin-profile/update", "/api/admin-profile/update"], async (req, res) => {
+  try {
+    const { real_name, status } = req.body;
+    if (!real_name && !status) {
+      return res.status(400).json({ ok: false, error: "No fields to update" });
+    }
+    const updates = [];
+    const values = [];
+    let idx = 1;
+    if (real_name !== undefined) {
+      updates.push(`real_name = $${idx++}`);
+      values.push(real_name);
+    }
+    if (status !== undefined) {
+      updates.push(`status = $${idx++}`);
+      values.push(status);
+    }
+    // For demo: update the first admin user
+    const q = `UPDATE consumer SET ${updates.join(', ')} WHERE role = 'admin' RETURNING consumer_id, name, real_name, role, created_at, status`;
+    const { rows } = await pool.query(q, values);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
     res.json({ ok: true, profile: rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });

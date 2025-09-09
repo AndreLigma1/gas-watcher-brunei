@@ -5,4 +5,6 @@ export interface Device {
   tank_level: number; // same as measurement for display
   timestamp: string; // ISO timestamp
   consumer_id?: string;
+  location?: string;
+  tank_type?: string;
 }

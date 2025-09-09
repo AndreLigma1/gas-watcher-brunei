@@ -4,8 +4,12 @@ import { useDevices } from '@/hooks/useDevices';
 import { useSearch } from '@/hooks/useSearch';
 import { DeviceCard } from '@/components/device-card';
 import { SearchBar } from '@/components/search-bar';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 const UserDashboard = () => {
 	const navigate = useNavigate();
@@ -17,6 +21,19 @@ const UserDashboard = () => {
 		data: devices || [],
 		searchFields: ['id']
 	});
+	const [username, setUsername] = useState(user?.name || '');
+	const [password, setPassword] = useState('');
+	// Placeholder handlers for username/password change
+	const handleUsernameChange = (e: React.FormEvent) => {
+		e.preventDefault();
+		// TODO: Implement backend call
+		alert('Username change not implemented');
+	};
+	const handlePasswordChange = (e: React.FormEvent) => {
+		e.preventDefault();
+		// TODO: Implement backend call
+		alert('Password change not implemented');
+	};
 	const handleDeviceClick = (deviceId: string) => {
 		navigate(`/device/${deviceId}`);
 	};
@@ -41,6 +58,42 @@ const UserDashboard = () => {
 							Logout
 						</button>
 					</div>
+					{/* Profile Card */}
+					<Card className="mb-8 max-w-2xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">
+						<Avatar className="h-20 w-20">
+							<AvatarImage src={undefined} alt="User avatar" />
+							<AvatarFallback>
+								<img src="/placeholder.svg" alt="avatar" className="h-10 w-10" />
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex-1 w-full">
+							<CardHeader className="p-0 mb-2">
+								<CardTitle className="text-xl">{user?.name}</CardTitle>
+								<div className="text-muted-foreground text-sm">Role: {user?.role}</div>
+								<div className="text-muted-foreground text-sm">Devices: {devices ? devices.length : 0}</div>
+							</CardHeader>
+							<CardContent className="p-0">
+								<form className="flex flex-col gap-2 mb-2" onSubmit={handleUsernameChange}>
+									<label className="text-xs font-medium">Change Username</label>
+									<div className="flex gap-2">
+										<Input value={username} onChange={e => setUsername(e.target.value)} className="max-w-xs" />
+										<Button type="submit" size="sm" disabled>Change</Button>
+									</div>
+								</form>
+								<form className="flex flex-col gap-2 mb-2" onSubmit={handlePasswordChange}>
+									<label className="text-xs font-medium">Change Password</label>
+									<div className="flex gap-2">
+										<Input type="password" value={password} onChange={e => setPassword(e.target.value)} className="max-w-xs" />
+										<Button type="submit" size="sm" disabled>Change</Button>
+									</div>
+								</form>
+								<div className="flex gap-2 mt-2">
+									<Button variant="destructive" size="sm" disabled>Delete User</Button>
+									<Button variant="outline" size="sm" disabled>Suspend User</Button>
+								</div>
+							</CardContent>
+						</div>
+					</Card>
 					<div className="flex flex-col sm:flex-row gap-4 items-end">
 						<div className="flex-1">
 							<SearchBar
@@ -65,7 +118,7 @@ const UserDashboard = () => {
 						{results.map((device) => (
 							<DeviceCard
 								key={device.id}
-								device={device}
+								device={{ ...device, location: device.location, tank_type: device.tank_type }}
 								onClick={() => handleDeviceClick(device.id)}
 							/>
 						))}
