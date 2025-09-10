@@ -8,36 +8,12 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { GLOBAL_TIMEZONE } from '@/lib/utils';
 import { TankLevel } from '@/components/tank-level';
-import { useState } from 'react';
-import axios from 'axios';
 
 export default function DeviceDetail() {
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
   
   const { data: device, isLoading: deviceLoading, error: deviceError } = useDevice(deviceId!);
-
-  const [location, setLocation] = useState(device?.location || '');
-  const [tankType, setTankType] = useState(device?.tank_type || '');
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      const res = await axios.patch(`/api/devices/${device.id}`, {
-        location,
-        tank_type: tankType,
-      });
-      setSaveMsg('Saved!');
-    } catch (e: any) {
-      setSaveMsg('Failed to save');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   if (deviceLoading) {
     return (
@@ -136,34 +112,6 @@ export default function DeviceDetail() {
                 <p className="text-sm text-muted-foreground">Percentage</p>
                 <p className="font-medium text-lg">{device.measurement}%</p>
               </div>
-              <form className="space-y-2 mt-4" onSubmit={handleSave}>
-                <div>
-                  <label className="block text-xs font-medium mb-1">Location</label>
-                  <input
-                    className="w-full border rounded px-2 py-1"
-                    value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="Enter location"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">Tank Type</label>
-                  <input
-                    className="w-full border rounded px-2 py-1"
-                    value={tankType}
-                    onChange={e => setTankType(e.target.value)}
-                    placeholder="Enter tank type"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="mt-2 px-4 py-2 rounded bg-primary text-white disabled:opacity-50"
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </button>
-                {saveMsg && <div className="text-xs mt-1 text-muted-foreground">{saveMsg}</div>}
-              </form>
             </div>
           </Card>
 

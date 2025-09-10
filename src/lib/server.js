@@ -1,3 +1,4 @@
+
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -63,7 +64,7 @@ mountGet(["/devices/latest", "/api/devices/latest"], async (req, res) => {
   try {
     const q = `
   SELECT DISTINCT ON (id)
-     id, measurement, tank_level, consumer_id, "timestamp", location, tank_type
+     id, measurement, tank_level, consumer_id, "timestamp"
       FROM devices
       ORDER BY id, "timestamp" DESC
       LIMIT $1
@@ -111,7 +112,7 @@ mountGet(["/devices", "/api/devices"], async (req, res) => {
 
   try {
     const q = `
-  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp", devices.location, devices.tank_type
+  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp"
       FROM devices
       ${joins}
       ${where}
@@ -144,7 +145,7 @@ mountGet(["/devices/:id", "/api/devices/:id"], async (req, res) => {
 
   try {
     const q = `
-      SELECT id, measurement, tank_level, "timestamp", location, tank_type
+      SELECT id, measurement, tank_level, "timestamp"
       FROM devices
       WHERE id = $1 AND "timestamp" >= $2
       ORDER BY "timestamp" ASC
@@ -342,35 +343,6 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
     res.json({ ok: true, item: rows[0] });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// --- Update device location and tank_type (user editable) ---
-app.patch(["/devices/:id", "/api/devices/:id"], async (req, res) => {
-  const { id } = req.params;
-  const { location, tank_type } = req.body;
-  if (location === undefined && tank_type === undefined) {
-    return res.status(400).json({ ok: false, error: "No fields to update" });
-  }
-  const updates = [];
-  const values = [];
-  let idx = 1;
-  if (location !== undefined) {
-    updates.push(`location = $${idx++}`);
-    values.push(location);
-  }
-  if (tank_type !== undefined) {
-    updates.push(`tank_type = $${idx++}`);
-    values.push(tank_type);
-  }
-  values.push(id);
-  const q = `UPDATE devices SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`;
-  try {
-    const { rows } = await pool.query(q, values);
-    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
-    res.json({ ok: true, device: rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
