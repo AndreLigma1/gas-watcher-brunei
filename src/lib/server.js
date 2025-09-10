@@ -1,4 +1,3 @@
-
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -307,7 +306,7 @@ mountGet(["/consumers", "/api/consumers"], async (req, res) => {
 
   const sql = `
     SELECT
-      c.consumer_id, c.name, c.role,
+      c.consumer_id, c.name, c.role, c.status,
       c.distributor_id, d.name AS distributor_name,
       d.manufacturer_id, m.name AS manufacturer_name,
       c.created_at, c.updated_at
@@ -330,7 +329,7 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT
-         c.consumer_id, c.name, c.role,
+         c.consumer_id, c.name, c.role, c.status,
          c.distributor_id, d.name AS distributor_name,
          d.manufacturer_id, m.name AS manufacturer_name,
          c.created_at, c.updated_at
@@ -343,6 +342,32 @@ mountGet(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
     res.json({ ok: true, item: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- Suspend user endpoint ---
+app.post(["/consumers/:id/suspend", "/api/consumers/:id/suspend"], async (req, res) => {
+  const { id } = req.params;
+  try {
+    const q = `UPDATE consumer SET status = 'not active' WHERE consumer_id = $1 RETURNING consumer_id, name, status`;
+    const { rows } = await pool.query(q, [id]);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, user: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- Unsuspend user endpoint ---
+app.post(["/consumers/:id/unsuspend", "/api/consumers/:id/unsuspend"], async (req, res) => {
+  const { id } = req.params;
+  try {
+    const q = `UPDATE consumer SET status = 'active' WHERE consumer_id = $1 RETURNING consumer_id, name, status`;
+    const { rows } = await pool.query(q, [id]);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, user: rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

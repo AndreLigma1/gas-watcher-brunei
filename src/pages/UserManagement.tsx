@@ -59,10 +59,20 @@ const UserManagement = () => {
   const handleSuspend = async (userId: string) => {
     if (!window.confirm('Suspend this user?')) return;
     try {
-      await axios.post(`/api/admin-profile/update`, { status: 'not active', consumer_id: userId });
+      await axios.post(`/api/consumers/${userId}/suspend`, { status: 'not active' });
       setUsers(users.map(u => u.consumer_id === userId ? { ...u, status: 'not active' } : u));
     } catch (e) {
       alert('Failed to suspend user');
+    }
+  };
+
+  const handleUnsuspend = async (userId: string) => {
+    if (!window.confirm('Unsuspend this user?')) return;
+    try {
+      await axios.post(`/api/consumers/${userId}/unsuspend`, { status: 'active' });
+      setUsers(users.map(u => u.consumer_id === userId ? { ...u, status: 'active' } : u));
+    } catch (e) {
+      alert('Failed to unsuspend user');
     }
   };
 
@@ -140,9 +150,15 @@ const UserManagement = () => {
                   <Button variant="destructive" size="sm" onClick={() => handleDelete(user.consumer_id)}>
                     Delete
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={() => handleSuspend(user.consumer_id)} disabled={user.status === 'not active'}>
-                    Suspend
-                  </Button>
+                  {user.status === 'not active' ? (
+                    <Button variant="secondary" size="sm" onClick={() => handleUnsuspend(user.consumer_id)}>
+                      Unsuspend
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" size="sm" onClick={() => handleSuspend(user.consumer_id)}>
+                      Suspend
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}
