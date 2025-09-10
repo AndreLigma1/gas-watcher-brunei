@@ -39,6 +39,8 @@ export const apiClient = {
       tank_level: Number(d.measurement), // use measurement as percentage for display
       timestamp: String(d.timestamp),
       consumer_id: d.consumer_id !== undefined ? String(d.consumer_id) : undefined,
+      location: d.location !== undefined ? String(d.location) : undefined,
+      tank_type: d.tank_type !== undefined ? String(d.tank_type) : undefined,
     })) as Device[];
   },
 
@@ -58,6 +60,8 @@ export const apiClient = {
             tank_level: Number(d.measurement), // use measurement as percentage for display
             timestamp: String(d.timestamp),
             consumer_id: d.consumer_id !== undefined ? String(d.consumer_id) : undefined,
+            location: d.location !== undefined ? String(d.location) : undefined,
+            tank_type: d.tank_type !== undefined ? String(d.tank_type) : undefined,
           } as Device;
         }
       }
