@@ -9,7 +9,9 @@ import { Activity } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { useState } from 'react';
+import axios from 'axios';
 
 const UserDashboard = () => {
 	const navigate = useNavigate();
@@ -23,6 +25,12 @@ const UserDashboard = () => {
 	});
 	const [username, setUsername] = useState(user?.name || '');
 	const [password, setPassword] = useState('');
+	const [editDevice, setEditDevice] = useState<any>(null);
+	const [editLocation, setEditLocation] = useState('');
+	const [editTankType, setEditTankType] = useState('');
+	const [saving, setSaving] = useState(false);
+	const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
 	// Placeholder handlers for username/password change
 	const handleUsernameChange = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -36,6 +44,37 @@ const UserDashboard = () => {
 	};
 	const handleDeviceClick = (deviceId: string) => {
 		navigate(`/device/${deviceId}`);
+	};
+	const openEdit = (device: any) => {
+		setEditDevice(device);
+		setEditLocation(device.location || '');
+		setEditTankType(device.tank_type || '');
+		setSaveMsg(null);
+	};
+	const closeEdit = () => {
+		setEditDevice(null);
+		setEditLocation('');
+		setEditTankType('');
+		setSaveMsg(null);
+	};
+	const handleEditSave = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!editDevice) return;
+		setSaving(true);
+		setSaveMsg(null);
+		try {
+			await axios.patch(`/api/devices/${editDevice.id}`, {
+				location: editLocation,
+				tank_type: editTankType,
+			});
+			setSaveMsg('Saved!');
+			// Optionally, refresh device list here
+			setTimeout(() => closeEdit(), 1000);
+		} catch (e: any) {
+			setSaveMsg('Failed to save');
+		} finally {
+			setSaving(false);
+		}
 	};
 	return (
 		<div className="min-h-screen bg-background">
@@ -114,15 +153,55 @@ const UserDashboard = () => {
 						</p>
 					</Card>
 				) : (
-					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-						{results.map((device) => (
-							<DeviceCard
-								key={device.id}
-								device={{ ...device, location: device.location, tank_type: device.tank_type }}
-								onClick={() => handleDeviceClick(device.id)}
-							/>
-						))}
-					</div>
+					<>
+						<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+							{results.map((device) => (
+								<div key={device.id} className="relative group">
+									<DeviceCard
+										device={device}
+										onClick={() => handleDeviceClick(device.id)}
+									/>
+									<Dialog open={editDevice?.id === device.id} onOpenChange={open => open ? openEdit(device) : closeEdit()}>
+										<DialogTrigger asChild>
+											<Button
+												variant="outline"
+												size="sm"
+												className="absolute top-2 right-2 opacity-80 group-hover:opacity-100"
+												onClick={e => { e.stopPropagation(); openEdit(device); }}
+											>
+												Edit
+											</Button>
+										</DialogTrigger>
+										<DialogContent>
+											<h3 className="text-lg font-semibold mb-4">Edit Device Info</h3>
+											<form className="space-y-4" onSubmit={handleEditSave}>
+												<div>
+													<label className="block text-xs font-medium mb-1">Location</label>
+													<Input
+														value={editLocation}
+														onChange={e => setEditLocation(e.target.value)}
+														placeholder="Enter location"
+													/>
+												</div>
+												<div>
+													<label className="block text-xs font-medium mb-1">Tank Type</label>
+													<Input
+														value={editTankType}
+														onChange={e => setEditTankType(e.target.value)}
+														placeholder="Enter tank type"
+													/>
+												</div>
+												<Button type="submit" disabled={saving} className="w-full">
+													{saving ? 'Saving...' : 'Save'}
+												</Button>
+												{saveMsg && <div className="text-xs mt-1 text-muted-foreground">{saveMsg}</div>}
+											</form>
+										</DialogContent>
+									</Dialog>
+								</div>
+							))}
+						</div>
+					</>
 				)}
 			</div>
 		</div>
