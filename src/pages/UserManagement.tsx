@@ -1,28 +1,70 @@
-
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
 
 const UserManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
+  const [devices, setDevices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/consumers')
-      .then(res => {
-        setUsers((res.data.items || []).filter((u: any) => u.role === 'user'));
+    Promise.all([
+      axios.get('/api/consumers'),
+      axios.get('/api/devices')
+    ])
+      .then(([userRes, deviceRes]) => {
+        const allUsers = (userRes.data.items || []).filter((u: any) => u.role === 'user');
+        setUsers(allUsers);
+        setDevices(deviceRes.data || []);
         setLoading(false);
       })
       .catch(e => {
-        setError('Failed to fetch users');
+        setError('Failed to fetch users or devices');
         setLoading(false);
       });
   }, []);
+
+  // Device count per user
+  const deviceCountMap = devices.reduce((acc: Record<string, number>, d: any) => {
+    if (d.consumer_id) acc[d.consumer_id] = (acc[d.consumer_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Filtered users
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) || String(user.consumer_id).includes(search);
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleDelete = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      await axios.delete(`/api/consumers/${userId}`);
+      setUsers(users.filter(u => u.consumer_id !== userId));
+    } catch (e) {
+      alert('Failed to delete user');
+    }
+  };
+
+  const handleSuspend = async (userId: string) => {
+    if (!window.confirm('Suspend this user?')) return;
+    try {
+      await axios.post(`/api/admin-profile/update`, { status: 'not active', consumer_id: userId });
+      setUsers(users.map(u => u.consumer_id === userId ? { ...u, status: 'not active' } : u));
+    } catch (e) {
+      alert('Failed to suspend user');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,22 +88,62 @@ const UserManagement = () => {
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <Input
+            placeholder="Search by name or ID..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="max-w-xs"
+          />
+          <select
+            className="border rounded px-2 py-2 text-sm max-w-xs"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="not active">Not Active</option>
+          </select>
+        </div>
         {loading ? (
           <Card className="p-8 text-center">Loading users...</Card>
         ) : error ? (
           <Card className="p-8 text-center text-red-500">{error}</Card>
-        ) : users.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <Card className="p-8 text-center">No users found</Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {users.map(user => (
+            {filteredUsers.map(user => (
               <Card
                 key={user.consumer_id}
-                className="p-4 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition"
-                onClick={() => navigate(`/user-detail/${user.consumer_id}`)}
+                className="p-4 flex flex-col gap-3 hover:shadow-lg hover:scale-[1.02] transition"
               >
-                <div className="font-semibold">{user.name}</div>
-                <div className="text-xs text-muted-foreground">ID: {user.consumer_id}</div>
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/placeholder.svg"
+                    alt="Profile"
+                    className="w-12 h-12 rounded-full border object-cover bg-muted"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-lg">{user.name}</div>
+                    <div className="text-xs text-muted-foreground">ID: {user.consumer_id}</div>
+                    <div className="text-xs text-muted-foreground">Status: {user.status || '-'}</div>
+                  </div>
+                </div>
+                <div className="text-sm mt-2 mb-2">
+                  <b>Devices:</b> {deviceCountMap[user.consumer_id] || 0}
+                </div>
+                <div className="flex gap-2 mt-auto">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/user-detail/${user.consumer_id}`)}>
+                    View
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(user.consumer_id)}>
+                    Delete
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => handleSuspend(user.consumer_id)} disabled={user.status === 'not active'}>
+                    Suspend
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
