@@ -24,12 +24,8 @@ const DeviceDetailAdmin = () => {
           <div className="mb-2">Tank Level: {device.measurement}% ({device.tank_level_cm} cm)</div>
           <div className="mb-2">Last Updated: {device.timestamp}</div>
           <div>Consumer ID: {device.consumer_id}</div>
-          {device.location && (
-            <div className="mb-2">Location: {device.location}</div>
-          )}
-          {device.tank_type && (
-            <div className="mb-2">Tank Type: {device.tank_type}</div>
-          )}
+          <div className="mb-2">Location: {device.location}</div>
+          <div className="mb-2">Tank Type: {device.tank_type}</div>
         </Card>
       </div>
     </div>
