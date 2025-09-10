@@ -112,6 +112,18 @@ export default function DeviceDetail() {
                 <p className="text-sm text-muted-foreground">Percentage</p>
                 <p className="font-medium text-lg">{device.measurement}%</p>
               </div>
+              {device.location && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-medium text-lg">{device.location}</p>
+                </div>
+              )}
+              {device.tank_type && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Tank Type</p>
+                  <p className="font-medium text-lg">{device.tank_type}</p>
+                </div>
+              )}
             </div>
           </Card>
 

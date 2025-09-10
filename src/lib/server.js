@@ -63,7 +63,7 @@ mountGet(["/devices/latest", "/api/devices/latest"], async (req, res) => {
   try {
     const q = `
   SELECT DISTINCT ON (id)
-     id, measurement, tank_level, consumer_id, "timestamp"
+     id, measurement, tank_level, consumer_id, "timestamp", location, tank_type
       FROM devices
       ORDER BY id, "timestamp" DESC
       LIMIT $1
@@ -111,7 +111,7 @@ mountGet(["/devices", "/api/devices"], async (req, res) => {
 
   try {
     const q = `
-  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp"
+  SELECT devices.id, devices.measurement, devices.tank_level, devices.consumer_id, devices."timestamp", devices.location, devices.tank_type
       FROM devices
       ${joins}
       ${where}
@@ -144,7 +144,7 @@ mountGet(["/devices/:id", "/api/devices/:id"], async (req, res) => {
 
   try {
     const q = `
-      SELECT id, measurement, tank_level, "timestamp"
+      SELECT id, measurement, tank_level, "timestamp", location, tank_type
       FROM devices
       WHERE id = $1 AND "timestamp" >= $2
       ORDER BY "timestamp" ASC

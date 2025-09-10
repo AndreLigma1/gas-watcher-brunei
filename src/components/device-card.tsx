@@ -12,7 +12,7 @@ interface DeviceCardProps {
 }
 
 export function DeviceCard({ device, onClick }: DeviceCardProps) {
-  const { id, measurement, tank_level_cm, timestamp } = device;
+  const { id, measurement, tank_level_cm, timestamp, location, tank_type } = device;
   const isClickable = !!onClick;
 
   return (
@@ -29,6 +29,8 @@ export function DeviceCard({ device, onClick }: DeviceCardProps) {
           <div>
             <h3 className="font-semibold text-card-foreground">Device {id}</h3>
             <p className="text-sm text-muted-foreground">Tank: {measurement}% &bull; {tank_level_cm} cm</p>
+            {location && <p className="text-xs text-muted-foreground">Location: {location}</p>}
+            {tank_type && <p className="text-xs text-muted-foreground">Tank Type: {tank_type}</p>}
           </div>
           <TankLevel level={measurement} size="sm" />
         </div>
