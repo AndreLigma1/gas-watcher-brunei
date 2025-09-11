@@ -373,6 +373,19 @@ app.post(["/consumers/:id/unsuspend", "/api/consumers/:id/unsuspend"], async (re
   }
 });
 
+// --- Delete user endpoint ---
+app.delete(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
+  const { id } = req.params;
+  try {
+    const q = `DELETE FROM consumer WHERE consumer_id = $1 RETURNING consumer_id, name`;
+    const { rows } = await pool.query(q, [id]);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, deleted: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // --- Get available roles from consumer_role enum ---
 app.get(["/roles", "/api/roles"], async (_req, res) => {
   try {

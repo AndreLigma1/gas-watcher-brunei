@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DeviceCard } from '@/components/device-card';
 import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,9 @@ const UserManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [selectedUserDevices, setSelectedUserDevices] = useState<any[]>([]);
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -147,6 +151,37 @@ const UserManagement = () => {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/user-detail/${user.consumer_id}`)}>
                     View
                   </Button>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setSelectedUserDevices(devices.filter((d: any) => d.consumer_id === user.consumer_id));
+                      setSelectedUserName(user.name);
+                      setShowDeviceModal(true);
+                    }}>
+                      View Devices
+                    </Button>
+      {/* Device Modal */}
+      {showDeviceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl"
+              onClick={() => setShowDeviceModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="text-xl font-bold mb-4">Devices for {selectedUserName}</h2>
+            {selectedUserDevices.length === 0 ? (
+              <div className="text-center text-muted-foreground">No devices found for this user.</div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {selectedUserDevices.map((device: any) => (
+                  <DeviceCard key={device.id} device={device} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
                   <Button variant="destructive" size="sm" onClick={() => handleDelete(user.consumer_id)}>
                     Delete
                   </Button>
