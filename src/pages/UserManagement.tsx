@@ -151,14 +151,32 @@ const UserManagement = () => {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/user-detail/${user.consumer_id}`)}>
                     View
                   </Button>
-                    <Button variant="outline" size="sm" onClick={() => {
-                      setSelectedUserDevices(devices.filter((d: any) => d.consumer_id === user.consumer_id));
-                      setSelectedUserName(user.name);
-                      setShowDeviceModal(true);
-                    }}>
-                      View Devices
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setSelectedUserDevices(devices.filter((d: any) => d.consumer_id === user.consumer_id));
+                    setSelectedUserName(user.name);
+                    setShowDeviceModal(true);
+                  }}>
+                    View Devices
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(user.consumer_id)}>
+                    Delete
+                  </Button>
+                  {user.status === 'not active' ? (
+                    <Button variant="secondary" size="sm" onClick={() => handleUnsuspend(user.consumer_id)}>
+                      Unsuspend
                     </Button>
-      {/* Device Modal */}
+                  ) : (
+                    <Button variant="secondary" size="sm" onClick={() => handleSuspend(user.consumer_id)}>
+                      Suspend
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Device Modal (moved outside card map) */}
       {showDeviceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
@@ -182,24 +200,6 @@ const UserManagement = () => {
           </div>
         </div>
       )}
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(user.consumer_id)}>
-                    Delete
-                  </Button>
-                  {user.status === 'not active' ? (
-                    <Button variant="secondary" size="sm" onClick={() => handleUnsuspend(user.consumer_id)}>
-                      Unsuspend
-                    </Button>
-                  ) : (
-                    <Button variant="secondary" size="sm" onClick={() => handleSuspend(user.consumer_id)}>
-                      Suspend
-                    </Button>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 };
