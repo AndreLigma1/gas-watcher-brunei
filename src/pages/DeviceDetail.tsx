@@ -65,11 +65,20 @@ export default function DeviceDetail() {
   }
 
   // Modal state
+
   const [open, setOpen] = React.useState(false);
-  const [location, setLocation] = React.useState(device.location || '');
-  const [tankType, setTankType] = React.useState(device.tank_type || '');
+  const [location, setLocation] = React.useState('');
+  const [tankType, setTankType] = React.useState('');
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Sync state with device when loaded
+  React.useEffect(() => {
+    if (device) {
+      setLocation(device.location || '');
+      setTankType(device.tank_type || '');
+    }
+  }, [device]);
 
   const handleEdit = () => {
     setLocation(device.location || '');
