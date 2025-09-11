@@ -15,24 +15,12 @@ const DistributorDashboard = () => {
   // Show all users for this distributor
   const { data: consumers, isLoading: usersLoading, error: usersError } = useConsumersByDistributor(user?.distributor_id);
   const [selectedUser, setSelectedUser] = React.useState<{ consumer_id: string; name: string } | null>(null);
-  const [showUsers, setShowUsers] = React.useState(true);
-  const [showDevices, setShowDevices] = React.useState(true);
-  // User search
-  const [userQuery, setUserQuery] = React.useState('');
-  const filteredConsumers = React.useMemo(() => {
-    if (!userQuery.trim()) return consumers || [];
-    return (consumers || []).filter((c: any) =>
-      c.name.toLowerCase().includes(userQuery.toLowerCase()) ||
-      c.consumer_id.toLowerCase().includes(userQuery.toLowerCase())
-    );
-  }, [consumers, userQuery]);
   // When a user is selected, show their devices
   const filterObj = selectedUser ? { consumer_id: selectedUser.consumer_id } : undefined;
   const { data: devices, isLoading: devicesLoading, error: devicesError } = useDevices(filterObj);
-  // Device search
   const { query, setQuery, results } = useSearch({
     data: devices || [],
-    searchFields: ['id', 'location', 'tank_type']
+    searchFields: ['id']
   });
   const handleUserClick = (consumer_id: string) => {
     const userObj = consumers.find((c: any) => c.consumer_id === consumer_id);
@@ -67,37 +55,19 @@ const DistributorDashboard = () => {
       <div className="max-w-7xl mx-auto p-6">
         {!selectedUser ? (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Users</h2>
-              <button
-                className="px-3 py-1 rounded bg-muted text-sm"
-                onClick={() => setShowUsers((v) => !v)}
-              >
-                {showUsers ? 'Hide' : 'Show'} Users
-              </button>
-            </div>
-            {showUsers && (
-              <>
-                <input
-                  className="mb-4 px-3 py-2 border rounded w-full max-w-md"
-                  placeholder="Search users by name or ID..."
-                  value={userQuery}
-                  onChange={e => setUserQuery(e.target.value)}
-                />
-                {usersLoading ? (
-                  <p>Loading users...</p>
-                ) : usersError ? (
-                  <p className="text-red-500">Failed to load users</p>
-                ) : filteredConsumers && filteredConsumers.length === 0 ? (
-                  <Card className="p-8 text-center">No users found for this distributor.</Card>
-                ) : (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredConsumers.map((c: any) => (
-                      <UserCard key={c.consumer_id} user={c} onClick={handleUserClick} showStaticImage />
-                    ))}
-                  </div>
-                )}
-              </>
+            <h2 className="text-xl font-semibold mb-4">Users</h2>
+            {usersLoading ? (
+              <p>Loading users...</p>
+            ) : usersError ? (
+              <p className="text-red-500">Failed to load users</p>
+            ) : consumers && consumers.length === 0 ? (
+              <Card className="p-8 text-center">No users found for this distributor.</Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {consumers.map((c: any) => (
+                  <UserCard key={c.consumer_id} user={c} onClick={handleUserClick} />
+                ))}
+              </div>
             )}
           </>
         ) : (
@@ -105,42 +75,23 @@ const DistributorDashboard = () => {
             <button className="mb-4 px-3 py-1 rounded bg-muted" onClick={() => setSelectedUser(null)}>
               ← Back to Users
             </button>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Devices for {selectedUser.name}</h2>
-              <button
-                className="px-3 py-1 rounded bg-muted text-sm"
-                onClick={() => setShowDevices((v) => !v)}
-              >
-                {showDevices ? 'Hide' : 'Show'} Devices
-              </button>
-            </div>
-            {showDevices && (
-              <>
-                <input
-                  className="mb-4 px-3 py-2 border rounded w-full max-w-md"
-                  placeholder="Search devices by ID, location, or tank type..."
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                />
-                {devicesLoading ? (
-                  <p>Loading devices...</p>
-                ) : devicesError ? (
-                  <p className="text-red-500">Failed to load devices</p>
-                ) : results.length === 0 ? (
-                  <Card className="p-8 text-center">No devices found for this user.</Card>
-                ) : (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {results.map((device) => (
-                      <DeviceCard
-                        key={device.id}
-                        device={device}
-                        onClick={() => handleDeviceClick(device.id)}
-                        alert={device.measurement !== undefined && device.measurement < 20}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+            <h2 className="text-xl font-semibold mb-4">Devices for {selectedUser.name}</h2>
+            {devicesLoading ? (
+              <p>Loading devices...</p>
+            ) : devicesError ? (
+              <p className="text-red-500">Failed to load devices</p>
+            ) : results.length === 0 ? (
+              <Card className="p-8 text-center">No devices found for this user.</Card>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {results.map((device) => (
+                  <DeviceCard
+                    key={device.id}
+                    device={device}
+                    onClick={() => handleDeviceClick(device.id)}
+                  />
+                ))}
+              </div>
             )}
           </>
         )}

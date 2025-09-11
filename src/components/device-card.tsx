@@ -9,10 +9,9 @@ import { TankLevel } from "@/components/tank-level";
 interface DeviceCardProps {
   device: Device;
   onClick?: () => void;
-  alert?: boolean;
 }
 
-export function DeviceCard({ device, onClick, alert }: DeviceCardProps) {
+export function DeviceCard({ device, onClick }: DeviceCardProps) {
   const { id, measurement, tank_level_cm, timestamp, location, tank_type } = device;
   const isClickable = !!onClick;
 
@@ -20,8 +19,7 @@ export function DeviceCard({ device, onClick, alert }: DeviceCardProps) {
     <Card
       className={cn(
         "p-4 transition-all duration-200 hover:shadow-md",
-        isClickable && "cursor-pointer hover:shadow-lg hover:scale-[1.02]",
-        alert && "bg-red-100 border-red-400"
+        isClickable && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
       )}
       onClick={onClick}
     >
