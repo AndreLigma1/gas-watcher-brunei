@@ -374,6 +374,7 @@ app.post(["/consumers/:id/unsuspend", "/api/consumers/:id/unsuspend"], async (re
 });
 
 // --- Delete user endpoint ---
+
 app.delete(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
   const { id } = req.params;
   try {
@@ -381,6 +382,35 @@ app.delete(["/consumers/:id", "/api/consumers/:id"], async (req, res) => {
     const { rows } = await pool.query(q, [id]);
     if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
     res.json({ ok: true, deleted: rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// --- Update device location and tank_type ---
+app.patch(["/devices/:id", "/api/devices/:id"], async (req, res) => {
+  const { id } = req.params;
+  const { location, tank_type } = req.body;
+  if (location === undefined && tank_type === undefined) {
+    return res.status(400).json({ ok: false, error: "No fields to update" });
+  }
+  const updates = [];
+  const values = [];
+  let idx = 1;
+  if (location !== undefined) {
+    updates.push(`location = $${idx++}`);
+    values.push(location);
+  }
+  if (tank_type !== undefined) {
+    updates.push(`tank_type = $${idx++}`);
+    values.push(tank_type);
+  }
+  values.push(id);
+  const q = `UPDATE devices SET ${updates.join(", ")} WHERE id = $${idx} RETURNING id, location, tank_type`;
+  try {
+    const { rows } = await pool.query(q, values);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "not_found" });
+    res.json({ ok: true, device: rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
