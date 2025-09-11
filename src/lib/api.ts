@@ -70,6 +70,34 @@ export const apiClient = {
     }
 
     const all = await this.getDevices();
+
     return all.find((d) => d.id === deviceId) || null;
+  },
+
+  /**
+   * Update device location and/or tank_type
+   */
+  async updateDevice(deviceId: string, data: { location?: string; tank_type?: string }): Promise<Device | null> {
+    const res = await fetch(`${BASE_URL}/devices/${encodeURIComponent(deviceId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to update device: ${res.status} ${res.statusText}`);
+    }
+    const d = await res.json();
+    if (d && d.device && d.device.id !== undefined) {
+      // Only return updated fields, not a full Device object
+      return {
+        id: String(d.device.id),
+        location: d.device.location !== undefined ? String(d.device.location) : undefined,
+        tank_type: d.device.tank_type !== undefined ? String(d.device.tank_type) : undefined,
+      } as Device;
+    }
+    return null;
   },
 };

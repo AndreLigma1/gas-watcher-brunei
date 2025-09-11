@@ -4,30 +4,54 @@ import { useDevice } from '@/hooks/useDevices';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Calendar, Pencil } from 'lucide-react';
+import { ArrowLeft, Calendar, Pencil, X, Check } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { GLOBAL_TIMEZONE } from '@/lib/utils';
 import { TankLevel } from '@/components/tank-level';
-import * as React from 'react';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
-
-const API_URL = 'http://192.168.123.129/api/devices';
+import { useState } from 'react';
+import { apiClient } from '@/lib/api';
 
 export default function DeviceDetail() {
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
   
-  const { data: device, isLoading: deviceLoading, error: deviceError } = useDevice(deviceId!);
+
+  const { data: device, isLoading: deviceLoading, error: deviceError, refetch } = useDevice(deviceId!);
+
+  // Edit state
+  const [editMode, setEditMode] = useState(false);
+  const [location, setLocation] = useState<string | undefined>(undefined);
+  const [tankType, setTankType] = useState<string | undefined>(undefined);
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Set initial values when entering edit mode
+  const startEdit = () => {
+    setLocation(device?.location ?? '');
+    setTankType(device?.tank_type ?? '');
+    setEditMode(true);
+    setErrorMsg(null);
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setErrorMsg(null);
+  };
+
+  const saveEdit = async () => {
+    setSaving(true);
+    setErrorMsg(null);
+    try {
+      await apiClient.updateDevice(deviceId!, { location, tank_type: tankType });
+      setEditMode(false);
+      refetch();
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Failed to update device');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (deviceLoading) {
     return (
@@ -64,49 +88,6 @@ export default function DeviceDetail() {
     );
   }
 
-  // Modal state
-
-  const [open, setOpen] = React.useState(false);
-  const [location, setLocation] = React.useState('');
-  const [tankType, setTankType] = React.useState('');
-  const [saving, setSaving] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Sync state with device when loaded
-  React.useEffect(() => {
-    if (device) {
-      setLocation(device.location || '');
-      setTankType(device.tank_type || '');
-    }
-  }, [device]);
-
-  const handleEdit = () => {
-    setLocation(device.location || '');
-    setTankType(device.tank_type || '');
-    setError(null);
-    setOpen(true);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_URL}/${device.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location, tank_type: tankType }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to update');
-      setOpen(false);
-      window.location.reload(); // quick refresh for now
-    } catch (e: any) {
-      setError(e.message || 'Failed to update');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -125,53 +106,9 @@ export default function DeviceDetail() {
               <h1 className="text-2xl font-bold">Device {device.id}</h1>
               <p className="text-muted-foreground">Tank Level: {device.tank_level}%</p>
             </div>
-            <Button variant="secondary" size="icon" onClick={handleEdit} title="Edit Location & Tank Type">
-              <Pencil className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Device Location & Tank Type</DialogTitle>
-            <DialogDescription>Update the location and tank type for this device.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Location</label>
-              <input
-                className="w-full border rounded px-3 py-2"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="Enter location"
-                disabled={saving}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Tank Type</label>
-              <input
-                className="w-full border rounded px-3 py-2"
-                value={tankType}
-                onChange={e => setTankType(e.target.value)}
-                placeholder="Enter tank type"
-                disabled={saving}
-              />
-            </div>
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-          </div>
-          <DialogFooter>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-            <DialogClose asChild>
-              <Button variant="outline" type="button" disabled={saving}>Cancel</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Content */}
       <div className="max-w-6xl mx-auto p-4 space-y-6">
@@ -213,16 +150,48 @@ export default function DeviceDetail() {
                 <p className="text-sm text-muted-foreground">Percentage</p>
                 <p className="font-medium text-lg">{device.measurement}%</p>
               </div>
-              {device.location && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium text-lg">{device.location}</p>
-                </div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">Location</p>
+                {!editMode && (
+                  <Button size="icon" variant="ghost" onClick={startEdit} title="Edit" className="ml-auto">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              {editMode ? (
+                <input
+                  className="font-medium text-lg border rounded px-2 py-1 w-full mb-2"
+                  value={location ?? ''}
+                  onChange={e => setLocation(e.target.value)}
+                  disabled={saving}
+                  placeholder="Enter location"
+                />
+              ) : (
+                <p className="font-medium text-lg">{device.location || <span className="text-muted-foreground">-</span>}</p>
               )}
-              {device.tank_type && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Tank Type</p>
-                  <p className="font-medium text-lg">{device.tank_type}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-sm text-muted-foreground">Tank Type</p>
+              </div>
+              {editMode ? (
+                <input
+                  className="font-medium text-lg border rounded px-2 py-1 w-full"
+                  value={tankType ?? ''}
+                  onChange={e => setTankType(e.target.value)}
+                  disabled={saving}
+                  placeholder="Enter tank type"
+                />
+              ) : (
+                <p className="font-medium text-lg">{device.tank_type || <span className="text-muted-foreground">-</span>}</p>
+              )}
+              {editMode && (
+                <div className="flex gap-2 mt-4">
+                  <Button onClick={saveEdit} disabled={saving} size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                    <Check className="w-4 h-4 mr-1" /> Save
+                  </Button>
+                  <Button onClick={cancelEdit} disabled={saving} size="sm" variant="outline">
+                    <X className="w-4 h-4 mr-1" /> Cancel
+                  </Button>
+                  {errorMsg && <span className="text-red-600 ml-2 text-sm">{errorMsg}</span>}
                 </div>
               )}
             </div>
