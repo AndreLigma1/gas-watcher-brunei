@@ -1,4 +1,6 @@
+
 import React from 'react';
+import placeholderImg from '@/../public/placeholder.svg';
 
 
 interface UserCardProps {
@@ -14,7 +16,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, showStaticImage }) =
   >
     {showStaticImage && (
       <img
-        src={require('@/../public/placeholder.svg')}
+        src={placeholderImg}
         alt="Profile"
         className="w-12 h-12 rounded-full object-cover border"
         style={{ background: '#EAEAEA' }}
