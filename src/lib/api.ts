@@ -72,7 +72,7 @@ export const apiClient = {
     const all = await this.getDevices();
 
     return all.find((d) => d.id === deviceId) || null;
-  },
+   },
 
   /**
    * Update device location and/or tank_type

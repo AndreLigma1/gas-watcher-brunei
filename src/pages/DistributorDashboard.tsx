@@ -29,6 +29,13 @@ const DistributorDashboard = () => {
   const handleDeviceClick = (deviceId: string) => {
     navigate(`/device/${deviceId}`);
   };
+
+  // Get notified device IDs from localStorage (set by UserDashboard)
+  const [notifiedDevices, setNotifiedDevices] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    const notified = localStorage.getItem('notifiedDevices');
+    setNotifiedDevices(notified ? JSON.parse(notified) : []);
+  }, [selectedUser]);
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card shadow-sm">
@@ -76,6 +83,12 @@ const DistributorDashboard = () => {
               ← Back to Users
             </button>
             <h2 className="text-xl font-semibold mb-4">Devices for {selectedUser.name}</h2>
+            {/* Alert UI for notified devices */}
+            {results.some((device) => notifiedDevices.includes(device.id)) && (
+              <div className="mb-4 p-4 rounded bg-red-100 text-red-700 border border-red-300 flex items-center gap-2">
+                ⚠️ Alert: User has requested a refill for one or more tanks!
+              </div>
+            )}
             {devicesLoading ? (
               <p>Loading devices...</p>
             ) : devicesError ? (
@@ -85,11 +98,15 @@ const DistributorDashboard = () => {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {results.map((device) => (
-                  <DeviceCard
-                    key={device.id}
-                    device={device}
-                    onClick={() => handleDeviceClick(device.id)}
-                  />
+                  <div key={device.id} className="relative">
+                    <DeviceCard
+                      device={device}
+                      onClick={() => handleDeviceClick(device.id)}
+                    />
+                    {notifiedDevices.includes(device.id) && (
+                      <span className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-semibold bg-red-200 text-red-700 border border-red-400">Refill Requested</span>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
