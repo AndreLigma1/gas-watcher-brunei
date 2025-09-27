@@ -1,40 +1,3 @@
-// Automatically update alert status to 'done' if tank is above 65%
-app.post("/api/alerts/auto-update", async (req, res) => {
-  const { deviceId, tankLevel } = req.body;
-  if (!deviceId || typeof tankLevel !== 'number') {
-    return res.status(400).json({ ok: false, error: "Missing deviceId or tankLevel" });
-  }
-  if (tankLevel > 65) {
-    try {
-      await pool.query(
-        `UPDATE alerts SET status = 'done' WHERE device_id = $1 AND status = 'new'`,
-        [deviceId]
-      );
-      return res.json({ ok: true, updated: true });
-    } catch (e) {
-      return res.status(500).json({ ok: false, error: e.message });
-    }
-  }
-  res.json({ ok: true, updated: false });
-});
-/* ------------------------------ Alerts --------------------------------- */
-
-app.post("/api/alerts", async (req, res) => {
-  const { deviceId, userId, distributorId, timestamp } = req.body;
-  if (!deviceId || !userId || !distributorId) {
-    return res.status(400).json({ ok: false, error: "Missing required fields" });
-  }
-  try {
-    const result = await pool.query(
-      `INSERT INTO alerts (device_id, user_id, distributor_id, timestamp, status)
-       VALUES ($1, $2, $3, $4, 'new') RETURNING *`,
-      [deviceId, userId, distributorId, timestamp || new Date().toISOString()]
-    );
-    res.status(201).json({ ok: true, alert: result.rows[0] });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -596,6 +559,44 @@ app.post(["/login", "/api/login"], async (req, res) => {
       token,
       user: userObj
     });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Automatically update alert status to 'done' if tank is above 65%
+app.post("/api/alerts/auto-update", async (req, res) => {
+  const { deviceId, tankLevel } = req.body;
+  if (!deviceId || typeof tankLevel !== 'number') {
+    return res.status(400).json({ ok: false, error: "Missing deviceId or tankLevel" });
+  }
+  if (tankLevel > 65) {
+    try {
+      await pool.query(
+        `UPDATE alerts SET status = 'done' WHERE device_id = $1 AND status = 'new'`,
+        [deviceId]
+      );
+      return res.json({ ok: true, updated: true });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+  res.json({ ok: true, updated: false });
+});
+/* ------------------------------ Alerts --------------------------------- */
+
+app.post("/api/alerts", async (req, res) => {
+  const { deviceId, userId, distributorId, timestamp } = req.body;
+  if (!deviceId || !userId || !distributorId) {
+    return res.status(400).json({ ok: false, error: "Missing required fields" });
+  }
+  try {
+    const result = await pool.query(
+      `INSERT INTO alerts (device_id, user_id, distributor_id, timestamp, status)
+       VALUES ($1, $2, $3, $4, 'new') RETURNING *`,
+      [deviceId, userId, distributorId, timestamp || new Date().toISOString()]
+    );
+    res.status(201).json({ ok: true, alert: result.rows[0] });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

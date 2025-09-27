@@ -83,27 +83,31 @@ const DistributorDashboard = () => {
             ) : results.length === 0 ? (
               <Card className="p-8 text-center">No devices found for this user.</Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {results.map((device) => {
-                  // Auto-update alert if tank is above 65%
-                  React.useEffect(() => {
-                    if (device.tank_level !== undefined && device.tank_level > 65) {
-                      fetch('/api/alerts/auto-update', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ deviceId: device.id, tankLevel: device.tank_level }),
-                      });
-                    }
-                  }, [device.tank_level, device.id]);
-                  return (
+              <>
+                {/* Auto-update alerts for all devices above 65% */}
+                {React.useEffect(() => {
+                  if (Array.isArray(results)) {
+                    results.forEach((device) => {
+                      if (device && typeof device.tank_level === 'number' && device.tank_level > 65) {
+                        fetch('/api/alerts/auto-update', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ deviceId: device.id, tankLevel: device.tank_level }),
+                        });
+                      }
+                    });
+                  }
+                }, [results]);
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {results.map((device) => (
                     <DeviceCard
-                      key={device.id}
+                      key={device?.id}
                       device={device}
-                      onClick={() => handleDeviceClick(device.id)}
+                      onClick={() => handleDeviceClick(device?.id)}
                     />
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}
