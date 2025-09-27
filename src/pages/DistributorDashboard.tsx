@@ -22,6 +22,22 @@ const DistributorDashboard = () => {
     data: devices || [],
     searchFields: ['id']
   });
+
+  // Auto-update alerts for all devices above 65%
+  React.useEffect(() => {
+    if (Array.isArray(results)) {
+      results.forEach((device) => {
+        if (device && typeof device.tank_level === 'number' && device.tank_level > 65) {
+          fetch('/api/alerts/auto-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deviceId: device.id, tankLevel: device.tank_level }),
+          });
+        }
+      });
+    }
+  }, [results]);
+  // ...existing code...
   const handleUserClick = (consumer_id: string) => {
     const userObj = consumers.find((c: any) => c.consumer_id === consumer_id);
     setSelectedUser(userObj);
@@ -83,31 +99,15 @@ const DistributorDashboard = () => {
             ) : results.length === 0 ? (
               <Card className="p-8 text-center">No devices found for this user.</Card>
             ) : (
-              <>
-                {/* Auto-update alerts for all devices above 65% */}
-                {React.useEffect(() => {
-                  if (Array.isArray(results)) {
-                    results.forEach((device) => {
-                      if (device && typeof device.tank_level === 'number' && device.tank_level > 65) {
-                        fetch('/api/alerts/auto-update', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ deviceId: device.id, tankLevel: device.tank_level }),
-                        });
-                      }
-                    });
-                  }
-                }, [results]);
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {results.map((device) => (
-                    <DeviceCard
-                      key={device?.id}
-                      device={device}
-                      onClick={() => handleDeviceClick(device?.id)}
-                    />
-                  ))}
-                </div>
-              </>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {results.map((device) => (
+                  <DeviceCard
+                    key={device?.id}
+                    device={device}
+                    onClick={() => handleDeviceClick(device?.id)}
+                  />
+                ))}
+              </div>
             )}
           </>
         )}
