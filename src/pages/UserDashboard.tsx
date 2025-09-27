@@ -10,14 +10,28 @@ import { Activity } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const UserDashboard = () => {
-	// Placeholder: store manual alerts locally (simulate notification)
-	const [manualAlerts, setManualAlerts] = useState<string[]>([]);
-	// Function to notify distributor manually
-	const notifyDistributorOfLowTank = (deviceId: string) => {
-		// In a real app, this would call an API or update global state
-		setManualAlerts((prev) => [...prev, deviceId]);
-		alert(`Distributor has been notified that tank ${deviceId} is low and needs a refill.`);
-	};
+		// Track which devices have sent alerts (for UI badge)
+		const [manualAlerts, setManualAlerts] = useState<string[]>([]);
+		// Function to notify distributor via backend
+		const notifyDistributorOfLowTank = async (deviceId: string) => {
+			try {
+				const res = await fetch('/api/alerts', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						deviceId,
+						userId: user?.consumer_id,
+						distributorId: user?.distributor_id,
+						timestamp: new Date().toISOString(),
+					}),
+				});
+				if (!res.ok) throw new Error('Failed to notify distributor');
+				setManualAlerts((prev) => [...prev, deviceId]);
+				alert(`Distributor has been notified that tank ${deviceId} is low and needs a refill.`);
+			} catch (err) {
+				alert('Failed to notify distributor.');
+			}
+		};
 	const navigate = useNavigate();
 	const { user, logout } = useAuth();
 	// Only show devices for this user
