@@ -148,13 +148,31 @@ const DistributorDashboard = () => {
               <Card className="p-8 text-center">No devices found for this user.</Card>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {results.map((device) => (
-                  <DeviceCard
-                    key={device?.id}
-                    device={device}
-                    onClick={() => handleDeviceClick(device?.id)}
-                  />
-                ))}
+                {results.map((device) => {
+                  // Find alert for this device
+                  const deviceAlert = alerts?.find(alert => alert.device_id === device.id);
+                  return (
+                    <div key={device?.id} className={deviceAlert ? 'bg-red-100 border-2 border-red-500 rounded-lg relative' : ''}>
+                      <DeviceCard
+                        device={device}
+                        onClick={() => handleDeviceClick(device?.id)}
+                      />
+                      {deviceAlert && (
+                        <div className="absolute top-2 right-2 flex flex-col items-end z-10">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-500 text-white text-xs font-semibold animate-pulse mb-1">
+                            Alert!
+                          </span>
+                          <button
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700"
+                            onClick={() => resolveAlert(deviceAlert.id)}
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Resolve
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </>
