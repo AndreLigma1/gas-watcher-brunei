@@ -7,7 +7,8 @@ import { DeviceCard } from '@/components/device-card';
 import UserCard from '@/components/user-card';
 import { useConsumersByDistributor } from '@/hooks/useConsumersByDistributor';
 import { Card } from '@/components/ui/card';
-import { Activity } from 'lucide-react';
+import { Activity, Bell, CheckCircle2 } from 'lucide-react';
+import { useDistributorAlerts } from '@/hooks/useDistributorAlerts';
 
 const DistributorDashboard = () => {
   const navigate = useNavigate();
@@ -22,6 +23,20 @@ const DistributorDashboard = () => {
     data: devices || [],
     searchFields: ['id']
   });
+
+  // Alerts for this distributor
+  const { alerts, loading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useDistributorAlerts(user?.distributor_id);
+
+  // Dismiss/resolve alert
+  const resolveAlert = async (alertId) => {
+    try {
+      const res = await fetch(`/api/alerts/${alertId}/resolve`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to resolve alert');
+      refetchAlerts();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 
   // Auto-update alerts for all devices above 65%
   React.useEffect(() => {
@@ -55,7 +70,15 @@ const DistributorDashboard = () => {
                 <Activity className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Distributor Dashboard</h1>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  Distributor Dashboard
+                  {alerts && alerts.length > 0 && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded bg-red-500 text-white text-xs font-semibold animate-pulse">
+                      <Bell className="w-4 h-4 mr-1" />
+                      {alerts.length} New Alert{alerts.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </h1>
                 <p className="text-muted-foreground">Users managed by your distributor</p>
               </div>
             </div>
@@ -66,6 +89,24 @@ const DistributorDashboard = () => {
               Logout
             </button>
           </div>
+          {/* Alert List Banner */}
+          {alerts && alerts.length > 0 && (
+            <div className="bg-red-100 border border-red-300 rounded p-3 flex items-center gap-3 mt-2">
+              <Bell className="text-red-500 w-5 h-5" />
+              <span className="font-medium text-red-700">There {alerts.length === 1 ? 'is' : 'are'} {alerts.length} new alert{alerts.length > 1 ? 's' : ''}!</span>
+              <div className="flex gap-2 ml-auto">
+                {alerts.map(alert => (
+                  <button
+                    key={alert.id}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700"
+                    onClick={() => resolveAlert(alert.id)}
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Resolve #{alert.id}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-6">
