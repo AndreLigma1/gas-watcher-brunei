@@ -620,8 +620,8 @@ app.get(["/alerts", "/api/alerts"], async (req, res) => {
   `;
   const params = [distributor_id];
   if (status) {
-    q += ' AND a.status = $2';
-    params.push(status);
+    q += ' AND a.status = $2::text'; // Ensure status is compared as text
+    params.push(String(status));
   }
   q += ' ORDER BY a.timestamp DESC';
   try {

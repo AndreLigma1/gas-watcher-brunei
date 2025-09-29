@@ -152,13 +152,29 @@ const DistributorDashboard = () => {
                   // Find alert for this device
                   const deviceAlert = alerts?.find(alert => alert.device_id === device.id);
                   return (
-                    <DeviceCard
+                    <div
                       key={device?.id}
-                      device={device}
-                      onClick={() => handleDeviceClick(device?.id)}
-                      alerted={!!deviceAlert}
-                      onResolveAlert={deviceAlert ? () => resolveAlert(deviceAlert.id) : undefined}
-                    />
+                      className={deviceAlert ? 'relative bg-red-100 border-2 border-red-500 rounded-lg' : 'relative'}
+                      style={{ minHeight: 0 }}
+                    >
+                      <DeviceCard
+                        device={device}
+                        onClick={() => handleDeviceClick(device?.id)}
+                      />
+                      {deviceAlert && (
+                        <div style={{ pointerEvents: 'auto' }} className="absolute top-2 right-2 flex flex-col items-end z-20">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-500 text-white text-xs font-semibold animate-pulse mb-1 shadow-lg">
+                            Alert!
+                          </span>
+                          <button
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700 shadow-lg"
+                            onClick={e => { e.stopPropagation(); resolveAlert(deviceAlert.id); }}
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Resolve
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
