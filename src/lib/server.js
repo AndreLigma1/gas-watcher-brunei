@@ -1,19 +1,4 @@
-// Resolve/dismiss an alert by id
-app.post(["/alerts/:id/resolve", "/api/alerts/:id/resolve"], async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query(
-      `UPDATE alerts SET status = 'done' WHERE id = $1 AND status = 'new' RETURNING *`,
-      [id]
-    );
-    if (!result.rows.length) {
-      return res.status(404).json({ ok: false, error: "Alert not found or already resolved" });
-    }
-    res.json({ ok: true, alert: result.rows[0] });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
+
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -580,6 +565,9 @@ app.post(["/login", "/api/login"], async (req, res) => {
   }
 });
 
+
+/* ------------------------------ Alerts --------------------------------- */
+
 app.post(["/api/alerts", "/alerts"], async (req, res) => {
   const { deviceId, userId, distributorId, timestamp } = req.body;
   if (!deviceId || !userId || !distributorId) {
@@ -616,7 +604,50 @@ app.post(["/api/alerts/auto-update", "/alerts/auto-update"], async (req, res) =>
   }
   res.json({ ok: true, updated: false });
 });
-/* ------------------------------ Alerts --------------------------------- */
+
+// Get alerts for a distributor, with device and user info
+app.get(["/alerts", "/api/alerts"], async (req, res) => {
+  const { distributor_id, status } = req.query;
+  if (!distributor_id) {
+    return res.status(400).json({ ok: false, error: "Missing distributor_id" });
+  }
+  let q = `
+    SELECT a.*, d.id as device_id, d.location, d.tank_level, c.consumer_id, c.name as consumer_name
+    FROM alerts a
+    JOIN devices d ON a.device_id = d.id
+    JOIN consumer c ON a.user_id = c.consumer_id
+    WHERE a.distributor_id = $1
+  `;
+  const params = [distributor_id];
+  if (status) {
+    q += ' AND a.status = $2';
+    params.push(status);
+  }
+  q += ' ORDER BY a.timestamp DESC';
+  try {
+    const { rows } = await pool.query(q, params);
+    res.json({ ok: true, items: rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+// Resolve/dismiss an alert by id
+app.post(["/alerts/:id/resolve", "/api/alerts/:id/resolve"], async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `UPDATE alerts SET status = 'done' WHERE id = $1 AND status = 'new' RETURNING *`,
+      [id]
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ ok: false, error: "Alert not found or already resolved" });
+    }
+    res.json({ ok: true, alert: result.rows[0] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 
 
 app.listen(PORT, () => console.log(`API on ${PORT}`));

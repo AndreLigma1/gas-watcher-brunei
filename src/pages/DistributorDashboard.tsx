@@ -24,20 +24,6 @@ const DistributorDashboard = () => {
     searchFields: ['id']
   });
 
-  // Alerts for this distributor
-  const { alerts, loading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useDistributorAlerts(user?.distributor_id);
-
-  // Dismiss/resolve alert
-  const resolveAlert = async (alertId) => {
-    try {
-      const res = await fetch(`/api/alerts/${alertId}/resolve`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to resolve alert');
-      refetchAlerts();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
   // Auto-update alerts for all devices above 65%
   React.useEffect(() => {
     if (Array.isArray(results)) {
@@ -52,6 +38,20 @@ const DistributorDashboard = () => {
       });
     }
   }, [results]);
+
+  // Alerts for this distributor
+  const { alerts, loading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useDistributorAlerts(user?.distributor_id);
+
+  // Dismiss/resolve alert
+  const resolveAlert = async (alertId) => {
+    try {
+      const res = await fetch(`/api/alerts/${alertId}/resolve`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to resolve alert');
+      refetchAlerts();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
   // ...existing code...
   const handleUserClick = (consumer_id: string) => {
     const userObj = consumers.find((c: any) => c.consumer_id === consumer_id);
@@ -89,20 +89,27 @@ const DistributorDashboard = () => {
               Logout
             </button>
           </div>
-          {/* Alert List Banner */}
+          {/* Alerted Devices Section */}
           {alerts && alerts.length > 0 && (
-            <div className="bg-red-100 border border-red-300 rounded p-3 flex items-center gap-3 mt-2">
-              <Bell className="text-red-500 w-5 h-5" />
-              <span className="font-medium text-red-700">There {alerts.length === 1 ? 'is' : 'are'} {alerts.length} new alert{alerts.length > 1 ? 's' : ''}!</span>
-              <div className="flex gap-2 ml-auto">
+            <div className="bg-red-100 border border-red-300 rounded p-3 flex flex-col gap-2 mt-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Bell className="text-red-500 w-5 h-5" />
+                <span className="font-medium text-red-700">Alerted Devices</span>
+              </div>
+              <div className="flex flex-col gap-2">
                 {alerts.map(alert => (
-                  <button
-                    key={alert.id}
-                    className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700"
-                    onClick={() => resolveAlert(alert.id)}
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> Resolve #{alert.id}
-                  </button>
+                  <div key={alert.id} className="flex items-center gap-2 bg-white rounded p-2 border border-red-200">
+                    <span className="font-semibold text-red-700">Device:</span> <span>{alert.device_id}</span>
+                    <span className="font-semibold text-red-700 ml-2">User:</span> <span>{alert.consumer_name}</span>
+                    <span className="font-semibold text-red-700 ml-2">Location:</span> <span>{alert.location}</span>
+                    <span className="font-semibold text-red-700 ml-2">Tank Level:</span> <span>{alert.tank_level}</span>
+                    <button
+                      className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700 ml-auto"
+                      onClick={() => resolveAlert(alert.id)}
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Resolve
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
