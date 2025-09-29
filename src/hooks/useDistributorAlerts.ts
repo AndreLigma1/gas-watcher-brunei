@@ -10,7 +10,7 @@ export function useDistributorAlerts(distributorId) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/alerts?distributor_id=${distributorId}&status=new`);
+  const res = await fetch(`/api/alerts?distributor_id=${distributorId}&status=0`);
       if (!res.ok) throw new Error('Failed to fetch alerts');
       const data = await res.json();
       setAlerts(data.items || []);

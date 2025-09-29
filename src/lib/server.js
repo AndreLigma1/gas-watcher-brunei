@@ -1,4 +1,3 @@
-
 // /opt/website/api/server.js
 import express from "express";
 import pkg from "pg";
@@ -628,6 +627,7 @@ app.get(["/alerts", "/api/alerts"], async (req, res) => {
     const { rows } = await pool.query(q, params);
     res.json({ ok: true, items: rows });
   } catch (e) {
+    console.error("Error in /api/alerts endpoint:", e);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
