@@ -573,9 +573,18 @@ app.post(["/api/alerts", "/alerts"], async (req, res) => {
     return res.status(400).json({ ok: false, error: "Missing required fields" });
   }
   try {
+    // Check for existing unresolved alert
+    const check = await pool.query(
+      `SELECT id FROM alerts WHERE device_id = $1 AND user_id = $2 AND distributor_id = $3 AND status = 0 LIMIT 1`,
+      [deviceId, userId, distributorId]
+    );
+    if (check.rows.length > 0) {
+      return res.status(409).json({ ok: false, error: "Unresolved alert already exists for this device/user/distributor" });
+    }
+    // Insert new unresolved alert
     const result = await pool.query(
       `INSERT INTO alerts (device_id, user_id, distributor_id, timestamp, status)
-       VALUES ($1, $2, $3, $4, 'new') RETURNING *`,
+       VALUES ($1, $2, $3, $4, 0) RETURNING *`,
       [deviceId, userId, distributorId, timestamp || new Date().toISOString()]
     );
     res.status(201).json({ ok: true, alert: result.rows[0] });
@@ -593,7 +602,7 @@ app.post(["/api/alerts/auto-update", "/alerts/auto-update"], async (req, res) =>
   if (tankLevel > 65) {
     try {
       await pool.query(
-        `UPDATE alerts SET status = 'done' WHERE device_id = $1 AND status = 'new'`,
+        `UPDATE alerts SET status = 1 WHERE device_id = $1 AND status = 0`,
         [deviceId]
       );
       return res.json({ ok: true, updated: true });
@@ -618,9 +627,9 @@ app.get(["/alerts", "/api/alerts"], async (req, res) => {
     WHERE a.distributor_id = $1
   `;
   const params = [distributor_id];
-  if (status) {
-    q += ' AND a.status = $2::text'; // Ensure status is compared as text
-    params.push(String(status));
+  if (status !== undefined) {
+    q += ' AND a.status = $2::int';
+    params.push(status);
   }
   q += ' ORDER BY a.timestamp DESC';
   try {
@@ -636,7 +645,7 @@ app.post(["/alerts/:id/resolve", "/api/alerts/:id/resolve"], async (req, res) =>
   const { id } = req.params;
   try {
     const result = await pool.query(
-      `UPDATE alerts SET status = 'done' WHERE id = $1 AND status = 'new' RETURNING *`,
+      `UPDATE alerts SET status = 1 WHERE id = $1 AND status = 0 RETURNING *`,
       [id]
     );
     if (!result.rows.length) {

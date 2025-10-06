@@ -14,23 +14,31 @@ const UserDashboard = () => {
 		const [manualAlerts, setManualAlerts] = useState<string[]>([]);
 		// Function to notify distributor via backend
 		const notifyDistributorOfLowTank = async (deviceId: string) => {
-			try {
-				const res = await fetch('/api/alerts', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						deviceId,
-						userId: user?.consumer_id,
-						distributorId: user?.distributor_id,
-						timestamp: new Date().toISOString(),
-					}),
-				});
-				if (!res.ok) throw new Error('Failed to notify distributor');
-				setManualAlerts((prev) => [...prev, deviceId]);
-				alert(`Distributor has been notified that tank ${deviceId} is low and needs a refill.`);
-			} catch (err) {
-				alert('Failed to notify distributor.');
-			}
+					try {
+						const res = await fetch('/api/alerts', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({
+								deviceId,
+								userId: user?.consumer_id,
+								distributorId: user?.distributor_id,
+								timestamp: new Date().toISOString(),
+							}),
+						});
+						const data = await res.json();
+								if (!res.ok) {
+									if (data.error && data.error.includes('Unresolved alert already exists')) {
+										alert('Alert already exists for this device.');
+									} else {
+										alert(data.error || 'Failed to notify distributor.');
+									}
+									return;
+								}
+						setManualAlerts((prev) => [...prev, deviceId]);
+						alert(`Distributor has been notified that tank ${deviceId} is low and needs a refill.`);
+					} catch (err) {
+						alert('Failed to notify distributor.');
+					}
 		};
 	const navigate = useNavigate();
 	const { user, logout } = useAuth();
