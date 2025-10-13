@@ -11,6 +11,7 @@ import { Activity, Bell, CheckCircle2 } from 'lucide-react';
 import { useDistributorAlerts } from '@/hooks/useDistributorAlerts';
 
 const DistributorDashboard = () => {
+  const [locationFilter, setLocationFilter] = React.useState('all');
   const [activeTab, setActiveTab] = React.useState<'users' | 'alerts'>('users');
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -111,6 +112,20 @@ const DistributorDashboard = () => {
       <div className="max-w-7xl mx-auto p-6">
         {activeTab === 'alerts' ? (
           <>
+            {/* Location Filter Dropdown */}
+            <div className="mb-4">
+              <label className="mr-2 font-medium">Filter by Location:</label>
+              <select
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                className="px-2 py-1 rounded border"
+              >
+                <option value="all">All</option>
+                {[...new Set(alerts?.map(a => a.location).filter(Boolean))].map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
             <h2 className="text-xl font-semibold mb-4">Alerts</h2>
             {alertsLoading ? (
               <p>Loading alerts...</p>
@@ -125,7 +140,7 @@ const DistributorDashboard = () => {
                   <span className="font-medium text-red-700">Alerted Devices</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {alerts.map(alert => (
+                  {alerts.filter(alert => locationFilter === 'all' || alert.location === locationFilter).map(alert => (
                     <div key={alert.id} className="flex items-center gap-2 bg-white rounded p-2 border border-red-200">
                       <span className="font-semibold text-red-700">Device:</span> <span>{alert.device_id}</span>
                       <span className="font-semibold text-red-700 ml-2">User:</span> <span>{alert.consumer_name}</span>
