@@ -61,6 +61,7 @@ const DistributorDashboard = () => {
   const handleDeviceClick = (deviceId: string) => {
     navigate(`/device/${deviceId}`);
   };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card shadow-sm">
@@ -144,72 +145,73 @@ const DistributorDashboard = () => {
           </>
         ) : (
           !selectedUser ? (
-          <>
-            <h2 className="text-xl font-semibold mb-4">Users</h2>
-            {usersLoading ? (
-              <p>Loading users...</p>
-            ) : usersError ? (
-              <p className="text-red-500">Failed to load users</p>
-            ) : consumers && consumers.length === 0 ? (
-              <Card className="p-8 text-center">No users found for this distributor.</Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {consumers.map((c: any) => (
-                  <UserCard key={c.consumer_id} user={c} onClick={handleUserClick} />
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <button className="mb-4 px-3 py-1 rounded bg-muted" onClick={() => setSelectedUser(null)}>
-              ← Back to Users
-            </button>
-            <h2 className="text-xl font-semibold mb-4">Devices for {selectedUser.name}</h2>
-            {devicesLoading ? (
-              <p>Loading devices...</p>
-            ) : devicesError ? (
-              <p className="text-red-500">Failed to load devices</p>
-            ) : results.length === 0 ? (
-              <Card className="p-8 text-center">No devices found for this user.</Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {results.map((device) => {
-                  // Find alert for this device
-                  const deviceAlert = alerts?.find(alert => alert.device_id === device.id);
-                  return (
-                    <div
-                      key={device?.id}
-                      className={deviceAlert ? 'relative bg-red-100 border-2 border-red-500 rounded-lg' : 'relative'}
-                      style={{ minHeight: 0 }}
-                    >
-                      <DeviceCard
-                        device={device}
-                        onClick={() => handleDeviceClick(device?.id)}
-                      />
-                      {deviceAlert && (
-                        <div style={{ pointerEvents: 'auto' }} className="absolute top-2 right-2 flex flex-col items-end z-20">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-500 text-white text-xs font-semibold animate-pulse mb-1 shadow-lg">
-                            Alert!
-                          </span>
-                          <button
-                            className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700 shadow-lg"
-                            onClick={e => { e.stopPropagation(); resolveAlert(deviceAlert.id); }}
-                          >
-                            <CheckCircle2 className="w-4 h-4" /> Resolve
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
+            <>
+              <h2 className="text-xl font-semibold mb-4">Users</h2>
+              {usersLoading ? (
+                <p>Loading users...</p>
+              ) : usersError ? (
+                <p className="text-red-500">Failed to load users</p>
+              ) : consumers && consumers.length === 0 ? (
+                <Card className="p-8 text-center">No users found for this distributor.</Card>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {consumers.map((c: any) => (
+                    <UserCard key={c.consumer_id} user={c} onClick={handleUserClick} />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <button className="mb-4 px-3 py-1 rounded bg-muted" onClick={() => setSelectedUser(null)}>
+                ← Back to Users
+              </button>
+              <h2 className="text-xl font-semibold mb-4">Devices for {selectedUser.name}</h2>
+              {devicesLoading ? (
+                <p>Loading devices...</p>
+              ) : devicesError ? (
+                <p className="text-red-500">Failed to load devices</p>
+              ) : results.length === 0 ? (
+                <Card className="p-8 text-center">No devices found for this user.</Card>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {results.map((device) => {
+                    // Find alert for this device
+                    const deviceAlert = alerts?.find(alert => alert.device_id === device.id);
+                    return (
+                      <div
+                        key={device?.id}
+                        className={deviceAlert ? 'relative bg-red-100 border-2 border-red-500 rounded-lg' : 'relative'}
+                        style={{ minHeight: 0 }}
+                      >
+                        <DeviceCard
+                          device={device}
+                          onClick={() => handleDeviceClick(device?.id)}
+                        />
+                        {deviceAlert && (
+                          <div style={{ pointerEvents: 'auto' }} className="absolute top-2 right-2 flex flex-col items-end z-20">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-500 text-white text-xs font-semibold animate-pulse mb-1 shadow-lg">
+                              Alert!
+                            </span>
+                            <button
+                              className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700 shadow-lg"
+                              onClick={e => { e.stopPropagation(); resolveAlert(deviceAlert.id); }}
+                            >
+                              <CheckCircle2 className="w-4 h-4" /> Resolve
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )
         )}
       </div>
     </div>
   );
-};
+}
 
 export default DistributorDashboard;
