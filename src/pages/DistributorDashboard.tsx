@@ -11,6 +11,7 @@ import { Activity, Bell, CheckCircle2 } from 'lucide-react';
 import { useDistributorAlerts } from '@/hooks/useDistributorAlerts';
 
 const DistributorDashboard = () => {
+  const [activeTab, setActiveTab] = React.useState<'users' | 'alerts'>('users');
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   // Show all users for this distributor
@@ -89,35 +90,60 @@ const DistributorDashboard = () => {
               Logout
             </button>
           </div>
-          {/* Alerted Devices Section */}
-          {alerts && alerts.length > 0 && (
-            <div className="bg-red-100 border border-red-300 rounded p-3 flex flex-col gap-2 mt-2">
-              <div className="flex items-center gap-2 mb-1">
-                <Bell className="text-red-500 w-5 h-5" />
-                <span className="font-medium text-red-700">Alerted Devices</span>
-              </div>
-              <div className="flex flex-col gap-2">
-                {alerts.map(alert => (
-                  <div key={alert.id} className="flex items-center gap-2 bg-white rounded p-2 border border-red-200">
-                    <span className="font-semibold text-red-700">Device:</span> <span>{alert.device_id}</span>
-                    <span className="font-semibold text-red-700 ml-2">User:</span> <span>{alert.consumer_name}</span>
-                    <span className="font-semibold text-red-700 ml-2">Location:</span> <span>{alert.location}</span>
-                    <span className="font-semibold text-red-700 ml-2">Tank Level:</span> <span>{alert.tank_level}</span>
-                    <button
-                      className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700 ml-auto"
-                      onClick={() => resolveAlert(alert.id)}
-                    >
-                      <CheckCircle2 className="w-4 h-4" /> Resolve
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-4">
+            <button
+              className={`px-4 py-2 rounded ${activeTab === 'users' ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}
+              onClick={() => setActiveTab('users')}
+            >
+              Users & Devices
+            </button>
+            <button
+              className={`px-4 py-2 rounded ${activeTab === 'alerts' ? 'bg-red-500 text-white' : 'bg-muted text-muted-foreground'}`}
+              onClick={() => setActiveTab('alerts')}
+            >
+              Alerts
+            </button>
+          </div>
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-6">
-        {!selectedUser ? (
+        {activeTab === 'alerts' ? (
+          <>
+            <h2 className="text-xl font-semibold mb-4">Alerts</h2>
+            {alertsLoading ? (
+              <p>Loading alerts...</p>
+            ) : alertsError ? (
+              <p className="text-red-500">Failed to load alerts</p>
+            ) : alerts && alerts.length === 0 ? (
+              <Card className="p-8 text-center">No alerts found.</Card>
+            ) : (
+              <div className="bg-red-100 border border-red-300 rounded p-3 flex flex-col gap-2 mt-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Bell className="text-red-500 w-5 h-5" />
+                  <span className="font-medium text-red-700">Alerted Devices</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {alerts.map(alert => (
+                    <div key={alert.id} className="flex items-center gap-2 bg-white rounded p-2 border border-red-200">
+                      <span className="font-semibold text-red-700">Device:</span> <span>{alert.device_id}</span>
+                      <span className="font-semibold text-red-700 ml-2">User:</span> <span>{alert.consumer_name}</span>
+                      <span className="font-semibold text-red-700 ml-2">Location:</span> <span>{alert.location}</span>
+                      <span className="font-semibold text-red-700 ml-2">Tank Level:</span> <span>{alert.tank_level}</span>
+                      <button
+                        className="flex items-center gap-1 px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700 ml-auto"
+                        onClick={() => resolveAlert(alert.id)}
+                      >
+                        <CheckCircle2 className="w-4 h-4" /> Resolve
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          !selectedUser ? (
           <>
             <h2 className="text-xl font-semibold mb-4">Users</h2>
             {usersLoading ? (
