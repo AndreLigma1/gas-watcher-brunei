@@ -191,7 +191,10 @@ const UserManagement = () => {
             {selectedUserDevices.length === 0 ? (
               <div className="text-center text-muted-foreground">No devices found for this user.</div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div
+                className="grid gap-4 md:grid-cols-2"
+                style={{ maxHeight: '400px', overflowY: 'auto' }}
+              >
                 {selectedUserDevices.map((device: any) => (
                   <DeviceCard key={device.id} device={device} />
                 ))}
