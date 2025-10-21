@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle } from 'lucide-react';
 
 const DeviceManagement = () => {
+  const [locationFilter, setLocationFilter] = useState('all');
+  const [tankTypeFilter, setTankTypeFilter] = useState('all');
   const navigate = useNavigate();
   const [filterType, setFilterType] = useState<'manufacturer' | 'distributor' | 'consumer' | null>(null);
   const [filterId, setFilterId] = useState<string>('');
@@ -25,10 +27,20 @@ const DeviceManagement = () => {
   }
 
   const { data: devices, isLoading, error } = useDevices(filterObj);
-  const { query, setQuery, results } = useSearch({
+  const { query, setQuery, results: searchResults } = useSearch({
     data: devices || [],
     searchFields: ['id']
   });
+
+  // Get unique locations and tank types
+  const locations = Array.from(new Set((devices || []).map(d => d.location).filter(Boolean)));
+  const tankTypes = Array.from(new Set((devices || []).map(d => d.tank_type).filter(Boolean)));
+
+  // Filter results by location and tank type
+  const results = searchResults.filter(d =>
+    (locationFilter === 'all' || d.location === locationFilter) &&
+    (tankTypeFilter === 'all' || d.tank_type === tankTypeFilter)
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,6 +70,32 @@ const DeviceManagement = () => {
                 onChange={setQuery}
                 placeholder="Search by device ID..."
               />
+            </div>
+            <div>
+              <label className="mr-2 font-medium">Location:</label>
+              <select
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                className="px-2 py-1 rounded border"
+              >
+                <option value="all">All</option>
+                {locations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mr-2 font-medium">Tank Type:</label>
+              <select
+                value={tankTypeFilter}
+                onChange={e => setTankTypeFilter(e.target.value)}
+                className="px-2 py-1 rounded border"
+              >
+                <option value="all">All</option>
+                {tankTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
